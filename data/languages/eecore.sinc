@@ -799,8 +799,8 @@ with : prime=28 {
         clampWord(RD128[112,16], hi1[32,32]);
     }
     :pmfhl.slw RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x2 & fct=0x30 {
-        clampLongWordSext(RD128[0,64], sext(lo:4 | hi:4));
-        clampLongWordSext(RD128[64,64], sext(lo1:4 | hi1:4));
+        RD128[0,64] = clampLongWordSext(lo:4 | hi:4);
+        RD128[64,64] = clampLongWordSext(lo1:4 | hi1:4);
     }
     :pmfhl.uw RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x1 & fct=0x30 {
         RD128[0,32] = lo[32,32];

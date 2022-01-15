@@ -1,5 +1,7 @@
 # COP2 (VU) macro instruction set
 
+define pcodeop LQC2;
+define pcodeop SQC2;
 define pcodeop BC2F;
 define pcodeop BC2FL;
 define pcodeop BC2T;
@@ -10,6 +12,18 @@ define pcodeop QMFC2;
 define pcodeop QMTC2;
 define pcodeop VCALLMS;
 define pcodeop VCALLMSR;
+
+# COP2 integer/control registers
+define register offset=0x4000 size=4 [
+     vi0     vi1     vi2     vi3
+     vi4     vi5     vi6     vi7
+     vi8     vi9    vi10    vi11
+    vi12    vi13    vi14    vi15
+     vc0     vc1     vc2     vc3
+     vc4     vc5     vc6     vc7
+     vc8     vc9    vc10    vc11
+    vc12    vc13    vc14    vc15
+];
 
 # COP2 floating point registers
 define register offset=0x4100 size=16 [
@@ -24,60 +38,40 @@ define register offset=0x4100 size=16 [
 ];
 
 define register offset=0x4100 size=4 [
-    vf0x        vf0y        vf0z        vf0w
-    vf1x        vf1y        vf1z        vf1w
-    vf2x        vf2y        vf2z        vf2w
-    vf3x        vf3y        vf3z        vf3w
-    vf4x        vf4y        vf4z        vf4w
-    vf5x        vf5y        vf5z        vf5w
-    vf6x        vf6y        vf6z        vf6w
-    vf7x        vf7y        vf7z        vf7w
-    vf8x        vf8y        vf8z        vf8w
-    vf9x        vf9y        vf9z        vf9w
-    vf10x       vf10y       vf10z       vf10w
-    vf11x       vf11y       vf11z       vf11w
-    vf12x       vf12y       vf12z       vf12w
-    vf13x       vf13y       vf13z       vf13w
-    vf14x       vf14y       vf14z       vf14w
-    vf15x       vf15y       vf15z       vf15w
-    vf16x       vf16y       vf16z       vf16w
-    vf17x       vf17y       vf17z       vf17w
-    vf18x       vf18y       vf18z       vf18w
-    vf19x       vf19y       vf19z       vf19w
-    vf20x       vf20y       vf20z       vf20w
-    vf21x       vf21y       vf21z       vf21w
-    vf22x       vf22y       vf22z       vf22w
-    vf23x       vf23y       vf23z       vf23w
-    vf24x       vf24y       vf24z       vf24w
-    vf25x       vf25y       vf25z       vf25w
-    vf26x       vf26y       vf26z       vf26w
-    vf27x       vf27y       vf27z       vf27w
-    vf28x       vf28y       vf28z       vf28w
-    vf29x       vf29y       vf29z       vf29w
-    vf30x       vf30y       vf30z       vf30w
-    vf31x       vf31y       vf31z       vf31w
+    vf0w        vf0y        vf0z        vf0x
+    vf1w        vf1y        vf1z        vf1x
+    vf2w        vf2y        vf2z        vf2x
+    vf3w        vf3y        vf3z        vf3x
+    vf4w        vf4y        vf4z        vf4x
+    vf5w        vf5y        vf5z        vf5x
+    vf6w        vf6y        vf6z        vf6x
+    vf7w        vf7y        vf7z        vf7x
+    vf8w        vf8y        vf8z        vf8x
+    vf9w        vf9y        vf9z        vf9x
+    vf10w       vf10y       vf10z       vf10x
+    vf11w       vf11y       vf11z       vf11x
+    vf12w       vf12y       vf12z       vf12x
+    vf13w       vf13y       vf13z       vf13x
+    vf14w       vf14y       vf14z       vf14x
+    vf15w       vf15y       vf15z       vf15x
+    vf16w       vf16y       vf16z       vf16x
+    vf17w       vf17y       vf17z       vf17x
+    vf18w       vf18y       vf18z       vf18x
+    vf19w       vf19y       vf19z       vf19x
+    vf20w       vf20y       vf20z       vf20x
+    vf21w       vf21y       vf21z       vf21x
+    vf22w       vf22y       vf22z       vf22x
+    vf23w       vf23y       vf23z       vf23x
+    vf24w       vf24y       vf24z       vf24x
+    vf25w       vf25y       vf25z       vf25x
+    vf26w       vf26y       vf26z       vf26x
+    vf27w       vf27y       vf27z       vf27x
+    vf28w       vf28y       vf28z       vf28x
+    vf29w       vf29y       vf29z       vf29x
+    vf30w       vf30y       vf30z       vf30x
+    vf31w       vf31y       vf31z       vf31x
 ];
 
-define register offset=0x4300 size=2 [
-     vi0  _ _ _  _ _ _ _
-     vi1  _ _ _  _ _ _ _
-     vi2  _ _ _  _ _ _ _
-     vi3  _ _ _  _ _ _ _
-     vi4  _ _ _  _ _ _ _
-     vi5  _ _ _  _ _ _ _
-     vi6  _ _ _  _ _ _ _
-     vi7  _ _ _  _ _ _ _
-     vi8  _ _ _  _ _ _ _
-     vi9  _ _ _  _ _ _ _
-     vi10 _ _ _  _ _ _ _
-     vi11 _ _ _  _ _ _ _
-     vi12 _ _ _  _ _ _ _
-     vi13 _ _ _  _ _ _ _
-     vi14 _ _ _  _ _ _ _
-     vi15 _ _ _  _ _ _ _
-];
-
-#obtained from pcsx2 VU.h
 define register offset=0x4300 size=4 [
     vucr0
     vucr1
@@ -96,12 +90,12 @@ define register offset=0x4300 size=4 [
     vucr14
     vucr15
     vuStatus_32
-    vuMAC_32
-    vuCF_32
+    vuMAC
+    vuCF
     _
-    vuR_32
+    vuR
     vuI
-    Q
+    vuQ
     P
     vf0_flag
     _
@@ -113,15 +107,10 @@ define register offset=0x4300 size=4 [
     vuCMSAR1_32
 ];
 
-
 define register offset=0x4400 size=16 vuACC;
 define register offset=0x4400 size=4 [vuACCw vuACCz vuACCy vuACCx];
 
-define register offset=0x4468 size=2 TCP;
-define register offset=0x446C size=2 CMSAR0;
-define register offset=0x447C size=2 CMSAR1;
-
-attach variables [ vuft vufd vufd_qmc2 vufs vuft_L vufd_L vufs_L ] [
+attach variables [ vuft vufd vufd_qmc2 vufs ] [
     vf0     vf1     vf2     vf3
     vf4     vf5     vf6     vf7
     vf8     vf9     vf10    vf11
@@ -137,88 +126,63 @@ attach variables [ vuit vuis vuid ] [
      vi4     vi5     vi6     vi7
      vi8     vi9    vi10    vi11
     vi12    vi13    vi14    vi15
-    _ _ _ _
-    _ _ _ _
-    _ _ _ _
-    _ _ _ _
+     vc0     vc1     vc2     vc3
+     vc4     vc5     vc6     vc7
+     vc8     vc9    vc10    vc11
+    vc12    vc13    vc14    vc15
 ];
 
-attach variables vuccid [
-    vucr0  vucr1  vucr2  vucr3
-    vucr4  vucr5  vucr6  vucr7
-    vucr8  vucr9  vucr10 vucr11
-    vucr12 vucr13 vucr14 vucr15
-    vuStatus_32 vuMAC_32 vuCF_32 _
-    vuR_32 vuI Q _
-    _ _ vuTCP_32 vuCMSAR0_32
-    vuFBRST vpu_STAT _ vuCMSAR1_32
-];
+vuinst: is prime=18 & vuco=1 { export 0:1; }
 
-macro ssum(src, dest) {
-    dest = (src[32,32] f* src[32,32]) f+ (src[64,32] f* src[64,32]) f+ (src[96,32] f* src[96,32]);
+@include "vuupper.sinc"
+
+:lqc2 vuft, OFF_BASE                              is prime=54 & OFF_BASE & vuft {
+    vuft = LQC2(*:16 OFF_BASE);
 }
 
-VI: immfloat is vucI_L=1 & immfloat {tmp:4 = float2float(immfloat:4); vuI = tmp; export tmp;}
-
-vuinst: is prime=18 & vuco=1 & microMode=0 { export 0:1; }
-
-with : microMode=1 & vuco=0 & vuco1=0 {
-    with V1E: {
-        : " [E]" is vucE=1 [cE=1; globalset(inst_next, cE);] { delayslot(2); return [0:4]; }
-        : is vucE=0 {}
-    }
-    with V1M: {
-        : " [M]" is vucM=1 [ cM = 1; globalset(inst_start, cM); ] {}
-        : is vucM=0 {}
-    }
-    with V1D: {
-        : " [D]" is vucD=1 { trap(); }
-        : is vucD=0 {}
-    }
-    with V1T: {
-        : " [T]" is vucT=1 { trap(); }
-        : is vucT=0 {}
-    }
+:sqc2 vuft, OFF_BASE                              is prime=62 & OFF_BASE & vuft {
+    *:16 OFF_BASE = SQC2(vuft);
 }
 
-with : microMode=1 & vuMicro=0 & cUpper=0 {
-    with V1E_L: {
-        :" [E]" is vucE_L=1 [cE=1; globalset(inst_next, cE);] { delayslot(1); return [0:4]; }
-        : is vucE_L=0 {}
+with : prime=18 {
+    :bc2f Rel16                                   is vuop_21_25=0b01000 & vuop_16_20=0b00000 & Rel16 {
+        tmp:1 = getCopCondition(2:1, 0:1);
+        delayslot(1);
+        if (tmp != 0) goto inst_next;
+        goto Rel16;
     }
-    with V1M_L: {
-        : " [M]" is vucM_L=1 [ cM = 1; globalset(inst_start, cM); ] {}
-        : is vucM_L=0 {}
-    }
-    with V1D_L: {
-        : " [D]" is vucD_L=1 { trap(); }
-        : is vucD_L=0 {}
-    }
-    with V1T_L: {
-        : " [T]" is vucT_L=1 { trap(); }
-        : is vucT_L=0 {}
-    }
-}
 
-VUFLAGS:^V1E^V1M^V1D^V1T is cUpper=1 & V1E & V1M & V1D & V1T [cUpper=0; globalset(inst_next, cUpper);] { build V1D; build V1T; }
-VUFLAGS_L:^V1E_L^V1M_L^V1D_L^V1T_L is V1E_L & V1M_L & V1D_L & V1T_L { build V1D_L; build V1T_L; }
+    :bc2fl Rel16                                  is vuop_21_25=0b01000 & vuop_16_20=0b00010 & Rel16 {
+        tmp:1 = getCopCondition(2:1, 0:1);
+        if (tmp != 0) goto inst_next;
+        delayslot(1);
+        goto Rel16;
+    }
 
-with VUIT: {
-    :vuit is vuit { export vuit; }
-    :vuit is vuit & vuit=0 { export 0:2; }
-}
-with VUIS: {
-    :vuis is vuis { export vuis; }
-    :vuis is vuis & vuis=0 { export 0:2; }
-}
-with VUID: {
-    :vuid is vuid { export vuid; }
-    :vuid is vuid & vuid=0 { export 0:2; }
-}
+    :bc2t Rel16                                   is vuop_21_25=0b01000 & vuop_16_20=0b00001 & Rel16 {
+        tmp:1 = getCopCondition(2:1, 0:1);
+        if (tmp == 0) goto inst_next;
+        delayslot(1);
+        goto Rel16;
+    }
 
-VU_OFF_BASE_IT: vusimm11(VUIT) is vusimm11 & VUIT { tmp:4 = zext((VUIT + vusimm11))*16; export tmp; }
-VU_OFF_BASE_IS: vusimm11(VUIS) is vusimm11 & VUIS { tmp:4 = zext((VUIS + vusimm11))*16; export tmp; }
-VIF0_ITOP: is epsilon {tmp:4 = 0x100038d0; export tmp;}
-VIF1_ITOP: is epsilon {tmp:4 = 0x10003cd0; export tmp;}
-VIF1_TOP: is epsilon {tmp:4 = 0x10003ce0; export tmp;}
-D2_TADR: is VUIS { tmp:4 = 0x1000a030; export tmp;}
+    :bc2tl Rel16                                  is vuop_21_25=0b01000 & vuop_16_20=0b00011 & Rel16 {
+        tmp:1 = getCopCondition(2:1, 0:1);
+        if (tmp == 0) goto inst_next;
+        delayslot(1);
+        goto Rel16;
+    }
+    
+    :cfc2.I RT, vuccid                            is vuop_21_25=0b00010 & RT    & vuccid    & vuop_1_10=0b0000000000 & I
+        { RT = CFC2(vuccid:4); }
+    :ctc2.I RTsrc, vuccid                         is vuop_21_25=0b00110 & RTsrc & vuccid    & vuop_1_10=0b0000000000 & I
+        { tmp:4 = CTC2(RTsrc:4); vuccid = tmp; }
+    :qmfc2.I RT128, vufd_qmc2                     is vuop_21_25=0b00001 & RT128 & vufd_qmc2                          & I
+        { RT128 = QMFC2(vufd_qmc2:4); }
+    :qmtc2.I RT128, vufd_qmc2                     is vuop_21_25=0b00101 & RT128 & vufd_qmc2 & vuop_1_10=0b0000000000 & I
+        { vufd_qmc2 = QMTC2(RT128:4); }
+    :vcallms imm15 "; address =" address          is vuco=1 & vudest=0b0000 & imm15 & vuop_0_5=0b111000 [ address = imm15 * 8; ]
+        { VCALLMS(imm15:4); }
+    :vcallmsr "vi27"                              is vuco=1 & vudest=0b0000 & vuft=0b00000 & vufs=0b11011 & fd=0b00000 & vuop_0_5=0b111001
+        { VCALLMSR(); }
+}

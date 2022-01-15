@@ -20,6 +20,4 @@ define space register type=register_space size=4;
 @include "cop0.sinc"
 @include "cop1.sinc"
 @include "cop2.sinc"
-@include "vuupper.sinc"
-@include "vulower.sinc"
 @include "mmio.sinc"
