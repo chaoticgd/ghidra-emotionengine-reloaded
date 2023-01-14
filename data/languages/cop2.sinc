@@ -121,7 +121,7 @@ attach variables [ vuft vufd vufd_qmc2 vufs ] [
     vf28    vf29    vf30    vf31
 ];
 
-attach variables [ vuit vuis vuid ] [
+attach variables [ vuit vuis vuid vuccid ] [
      vi0     vi1     vi2     vi3
      vi4     vi5     vi6     vi7
      vi8     vi9    vi10    vi11
