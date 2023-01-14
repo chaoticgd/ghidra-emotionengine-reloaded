@@ -113,11 +113,6 @@ define token instr(32)
     bigfunct	= (0,10)
 
 # cop2 stuff
-    vucI=(31,31) # 1 when next instruction is loi
-    vucE=(30,30) # return to micro mode after this instruction
-    vucM=(29,29) # 1 to disable QMTC2/CTC2 interlock
-    vucD=(28,28) # 1 for debug break
-    vucT=(27,27) # 1 for debug halt
     vuoffset    = (0,15)
     vuop_0_5    = (0,5)
     vuop_0_10   = (0,10)
@@ -152,32 +147,6 @@ define token instr(32)
     vulop6       = (0,5)
     vul24        = (24,24)
     vul22_24     = (22,24)
-;
-
-define token inst_long(64)
-    vucI_L=(63,63) # 1 when next instruction is loi
-    vucE_L=(62,62) # return to micro mode after this instruction
-    vucM_L=(61,61) # 1 to disable QMTC2/CTC2 interlock
-    vucD_L=(60,60) # 1 for debug break
-    vucT_L=(59,59) # 1 for debug halt
-    vuMicro=(57,58)
-    longnop=(0,55)
-    vudest_L=(53,56)
-    vuft_L=(48,52)
-    vufs_L=(43,47)
-    vufd_L=(38,42)
-    vuop_32_37=(32,37)
-    vuop_32_42=(32,42)
-    vulop11_L=(32,42)
-    immfloat=(0,31)
-;
-
-define register offset=0x350 size=4 contextreg;
-define context contextreg
-    microMode=(0,0)
-    cM=(1,1)
-    cE=(2,2) noflow
-    cUpper=(3,3) noflow
 ;
 
 # 64 bit
@@ -227,9 +196,5 @@ RT32src: rt   	is rt & rt32=0      { export 0:4; }
 # relative offsets
 Rel16: reloc		is off16	[ reloc=inst_start+4+4*off16; ]					{ export *:4 reloc; }
 Abs26: reloc		is ind26	[ reloc=((inst_start+4) $and 0xfffffffff0000000) | 4*ind26; ]	{ export *:4 reloc; }
-Rel11: reloc		is vusimm11	[ reloc=inst_start+8+8*vusimm11; ]					{ export *:4 reloc; }
 
 OFF_BASE: simmed(base)  	is simmed & base    { tmp:4 = base:4 + simmed; export tmp; }
-
-VU_IMM15: result is vuop_0_10 & vuop_21_24 [ result = (vuop_21_24 << 11) $or vuop_0_10; ] { tmp:2 = result; export tmp; }
-VU_IMM12_UP6: u6 is vuop_0_10 & vuop_21_24 [ u6=(((vuop_21_24 $and 0x1) << 6) | (vuop_0_10 >> 6)) << 6; ]{ tmp:1 = u6; export tmp; }

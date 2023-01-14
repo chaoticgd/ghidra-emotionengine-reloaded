@@ -5,24 +5,7 @@
         <property key="addressesDoNotAppearDirectlyInCode" value="true"/>
     </properties>
     <programcounter register="pc"/>
-    <context_data>
-        <context_set space="ram" first="0x11008000" last="0x1100BFFF">
-            <set name="microMode" val="1" description="vu micro mode"/>
-        </context_set>
-        <context_set space="ram">
-            <set name="cM" val="0" description="vu M bit"/>
-            <set name="cE" val="0" description="vu E bit"/>
-            <set name="cUpper" val="0" description="vu1 upper instruction flag"/>
-        </context_set>
-    </context_data>
     <register_data>
-        <register name="microMode" hidden="true"/>
-        <register name="cUpper" hidden="true"/>
-        <register name="cM" hidden="true"/>
-        <register name="cE" hidden="true"/>
-        <register name="vuCF" hidden="true"/>
-        <register name="vuStatus" hidden="true"/>
-        <register name="vuMAC" hidden="true"/>
         <register name="fsa" rename="sa"/>
         <register name="vf0" vector_lane_sizes="4"/>
         <register name="vf1" vector_lane_sizes="4"/>
