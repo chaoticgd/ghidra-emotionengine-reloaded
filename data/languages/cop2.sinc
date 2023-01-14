@@ -181,8 +181,8 @@ with : prime=18 {
         { RT128 = _qmfc2(vufd_qmc2:4); }
     :qmtc2.I RT128, vufd_qmc2                     is vuop_21_25=0b00101 & RT128 & vufd_qmc2 & vuop_1_10=0b0000000000 & I
         { vufd_qmc2 = _qmtc2(RT128:4); }
-    :vcallms imm15 "; address =" address          is vuco=1 & vudest=0b0000 & imm15 & vuop_0_5=0b111000 [ address = imm15 * 8; ]
-        { _vcallms(imm15:4); }
+    :vcallms imm15                                is vuco=1 & vudest=0b0000 & imm15 & vuop_0_5=0b111000
+        { _vcallms(imm15:4 * 8); }
     :vcallmsr "vi27"                              is vuco=1 & vudest=0b0000 & vuft=0b00000 & vufs=0b11011 & fd=0b00000 & vuop_0_5=0b111001
         { _vcallmsr(); }
 }
