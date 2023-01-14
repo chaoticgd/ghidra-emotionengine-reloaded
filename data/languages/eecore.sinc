@@ -9,7 +9,7 @@ define pcodeop countLeadingOnes;
 define register offset=0x400 size=8 [ fsa ];       # 64 bit
 
 # 0111 10bb bbbt tttt iiii iiii iiii iiii
-:lq RT128, OFF_BASE    is microMode=0 & prime=30 & OFF_BASE & RT128 {
+:lq RT128, OFF_BASE    is prime=30 & OFF_BASE & RT128 {
     RT128[0,32] = *:4 OFF_BASE;
 	RT128[32,32] = *:4 (OFF_BASE+4);
 	RT128[64,32] = *:4 (OFF_BASE+8);
@@ -17,43 +17,43 @@ define register offset=0x400 size=8 [ fsa ];       # 64 bit
 }
 
 # 0111 11bb bbbt tttt iiii iiii iiii iiii
-:sq RT128src, OFF_BASE    is microMode=0 & prime=31 & OFF_BASE & RT128src {
+:sq RT128src, OFF_BASE    is prime=31 & OFF_BASE & RT128src {
     *:4 OFF_BASE = RT128src[0,32];
 	*:4 (OFF_BASE+4) = RT128src[32,32];
 	*:4 (OFF_BASE+8) = RT128src[64,32];
 	*:4 (OFF_BASE+12) = RT128src[96,32];
 }
 
-:mfsa RD        is microMode=0 & prime=0 & RD & rs=0 & rt=0 & fct=40 {
+:mfsa RD        is prime=0 & RD & rs=0 & rt=0 & fct=40 {
     RD = fsa;
 }
 
-:mtsa RSsrc     is microMode=0 & prime=0 & RSsrc & imm15=0 & fct=41 {
+:mtsa RSsrc     is prime=0 & RSsrc & imm15=0 & fct=41 {
     fsa = RSsrc;
 }
 
-:mtsab RSsrc, immed    is microMode=0 & prime=1 & RSsrc & copfct=24 & immed {
+:mtsab RSsrc, immed    is prime=1 & RSsrc & copfct=24 & immed {
     im:1 = immed;
     fsa = 8 * zext(RSsrc[0,4] ^ im[0,4]);
 }
 
-:mtsah RSsrc, immed    is microMode=0 & prime=1 & RSsrc & copfct=25 & immed {
+:mtsah RSsrc, immed    is prime=1 & RSsrc & copfct=25 & immed {
     im:1 = immed;
     fsa = 16 * zext(RSsrc[0,4] ^ im[0,4]);
 }
 
-:clear fsa    is microMode=0 & prime=1 & fsa & rs=0 & copfct=25 & immed=0 {
+:clear fsa    is prime=1 & fsa & rs=0 & copfct=25 & immed=0 {
     fsa=0;
 }
 
-:mult RD, RS32src, RT32src    is microMode=0 & prime=0 & RD & RS32src & RT32src & zero5=0 & fct=24 {
+:mult RD, RS32src, RT32src    is prime=0 & RD & RS32src & RT32src & zero5=0 & fct=24 {
     prod:8 = sext(RS32src * RT32src);
     lo[0,32] = prod[0,32];
     hi[0,32] = prod[32,32];
     RD = prod;
 }
 
-:multu RD, RS32src, RT32src          is microMode=0 & prime=0 & RD & RS32src & RT32src & zero5=0 & fct=25 {
+:multu RD, RS32src, RT32src          is prime=0 & RD & RS32src & RT32src & zero5=0 & fct=25 {
     prod:8 = zext(RS32src * RT32src);
     lo[0,32] = prod[0,32];
     hi[0,32] = prod[32,32];
@@ -62,1105 +62,352 @@ define register offset=0x400 size=8 [ fsa ];       # 64 bit
 
 with : prime=28 {
 
-    #special case parallel invert
-    :pnor RD128, RS128src, RT128src    is microMode=0 & RD128 & rs=0 & RS128src & RT128src & mmiop=0x13 & fct=0x29 {
-        RD128 = ~RT128src;
-    }
+#special case parallel invert
+:pnor RD128, RS128src, RT128src    is RD128 & rs=0 & RS128src & RT128src & mmiop=0x13 & fct=0x29 {
+    RD128 = ~RT128src;
+}
 
-    # 0011 10ss ssst tttt 0000 0000 0001 1010
-    :div1 RS32src, RT32src    is microMode=0 & fct=26 & zero10=0 & RS32src & RT32src {
-        lo1 = sext(RS32src s/ RT32src);
-        hi1 = sext(RS32src s% RT32src);
-    }
+# 0011 10ss ssst tttt 0000 0000 0001 1010
+:div1 RS32src, RT32src    is fct=26 & zero10=0 & RS32src & RT32src {
+    lo1 = sext(RS32src s/ RT32src);
+    hi1 = sext(RS32src s% RT32src);
+}
 
-    # 0011 10ss ssst tttt 0000 0000 0001 1011
-    :divu1 RS32src, RT32src    is microMode=0 & fct=27 & zero10=0 & RS32src & RT32src {
-        lo1 = zext(RS32src / RT32src);
-        hi1 = zext(RS32src % RT32src);
-    }
+# 0011 10ss ssst tttt 0000 0000 0001 1011
+:divu1 RS32src, RT32src    is fct=27 & zero10=0 & RS32src & RT32src {
+    lo1 = zext(RS32src / RT32src);
+    hi1 = zext(RS32src % RT32src);
+}
 
-    # 0111 00ss ssst tttt dddd d000 0000 0000
-    :madd RS32src, RT32src    is microMode=0 & RS32src & RT32src & rd=0 & zero5=0 & fct=0 {
-        prod:8 = (lo | hi) + sext(RS32src * RT32src);
-        lo = sext(prod[0,32]);
-        hi = sext(prod[32,32]);
-    }
+# 0111 00ss ssst tttt dddd d000 0000 0000
+:madd RS32src, RT32src    is RS32src & RT32src & rd=0 & zero5=0 & fct=0 {
+    prod:8 = (lo | hi) + sext(RS32src * RT32src);
+    lo = sext(prod[0,32]);
+    hi = sext(prod[32,32]);
+}
 
-    # 0111 00ss ssst tttt dddd d000 0000 0000
-    :madd RD, RS32src, RT32src    is microMode=0 & RS32src & RT32src & RD & zero5=0 & fct=0 {
-        prod:8 = (lo | hi) + sext(RS32src * RT32src);
-        lo = sext(prod[0,32]);
-        hi = sext(prod[32,32]);
-        RD = lo;
-    }
+# 0111 00ss ssst tttt dddd d000 0000 0000
+:madd RD, RS32src, RT32src    is RS32src & RT32src & RD & zero5=0 & fct=0 {
+    prod:8 = (lo | hi) + sext(RS32src * RT32src);
+    lo = sext(prod[0,32]);
+    hi = sext(prod[32,32]);
+    RD = lo;
+}
 
-    # 0111 00ss ssst tttt dddd d000 0010 0000
-    :madd1 RS32src, RT32src    is microMode=0 & RS32src & RT32src & rd=0 & zero5=0 & fct=32 {
-        prod:8 = (lo1 | hi1) + sext(RS32src * RT32src);
-        lo1 = sext(prod[0,32]);
-        hi1 = sext(prod[32,32]);
-    }
+# 0111 00ss ssst tttt dddd d000 0010 0000
+:madd1 RS32src, RT32src    is RS32src & RT32src & rd=0 & zero5=0 & fct=32 {
+    prod:8 = (lo1 | hi1) + sext(RS32src * RT32src);
+    lo1 = sext(prod[0,32]);
+    hi1 = sext(prod[32,32]);
+}
 
-    # 0111 00ss ssst tttt dddd d000 0010 0000
-    :madd1 RD, RS32src, RT32src    is microMode=0 & RS32src & RT32src & RD & zero5=0 & fct=32 {
-        prod:8 = (lo1 | hi1) + sext(RS32src * RT32src);
-        lo1 = sext(prod[0,32]);
-        hi1 = sext(prod[32,32]);
-        RD = lo1;
-    }
+# 0111 00ss ssst tttt dddd d000 0010 0000
+:madd1 RD, RS32src, RT32src    is RS32src & RT32src & RD & zero5=0 & fct=32 {
+    prod:8 = (lo1 | hi1) + sext(RS32src * RT32src);
+    lo1 = sext(prod[0,32]);
+    hi1 = sext(prod[32,32]);
+    RD = lo1;
+}
 
 
-    # 0111 00ss ssst tttt dddd d000 0000 0001
-    :maddu RS32src, RT32src    is microMode=0 & RS32src & RT32src & rd=0 & zero5=0 & fct=1 {
-        prod:8 = (lo | hi) + zext(RS32src * RT32src);
-        lo = zext(prod[0,32]);
-        hi = zext(prod[32,32]);
-    }
+# 0111 00ss ssst tttt dddd d000 0000 0001
+:maddu RS32src, RT32src    is RS32src & RT32src & rd=0 & zero5=0 & fct=1 {
+    prod:8 = (lo | hi) + zext(RS32src * RT32src);
+    lo = zext(prod[0,32]);
+    hi = zext(prod[32,32]);
+}
 
-    # 0111 00ss ssst tttt dddd d000 0000 0001
-    :maddu RD, RS32src, RT32src    is microMode=0 & RS32src & RT32src & RD & zero5=0 & fct=1 {
-        prod:8 = (lo | hi) + zext(RS32src * RT32src);
-        lo = zext(prod[0,32]);
-        hi = zext(prod[32,32]);
-        RD = lo;
-    }
+# 0111 00ss ssst tttt dddd d000 0000 0001
+:maddu RD, RS32src, RT32src    is RS32src & RT32src & RD & zero5=0 & fct=1 {
+    prod:8 = (lo | hi) + zext(RS32src * RT32src);
+    lo = zext(prod[0,32]);
+    hi = zext(prod[32,32]);
+    RD = lo;
+}
 
-    # 0111 00ss ssst tttt dddd d000 0010 0001
-    :maddu1 RS32src, RT32src    is microMode=0 & RS32src & RT32src & rd=0 & zero5=0 & fct=33 {
-        prod:8 = (lo1 | hi1) + zext(RS32src * RT32src);
-        lo1 = zext(prod[0,32]);
-        hi1 = zext(prod[32,32]);
-    }
+# 0111 00ss ssst tttt dddd d000 0010 0001
+:maddu1 RS32src, RT32src    is RS32src & RT32src & rd=0 & zero5=0 & fct=33 {
+    prod:8 = (lo1 | hi1) + zext(RS32src * RT32src);
+    lo1 = zext(prod[0,32]);
+    hi1 = zext(prod[32,32]);
+}
 
-    # 0111 00ss ssst tttt dddd d000 0010 0001
-    :maddu1 RD, RS32src, RT32src    is microMode=0 & RS32src & RT32src & RD & zero5=0 & fct=33 {
-        prod:8 = (lo1 | hi1) + zext(RS32src * RT32src);
-        lo1 = zext(prod[0,32]);
-        hi1 = zext(prod[32,32]);
-        RD = lo1;
-    }
+# 0111 00ss ssst tttt dddd d000 0010 0001
+:maddu1 RD, RS32src, RT32src    is RS32src & RT32src & RD & zero5=0 & fct=33 {
+    prod:8 = (lo1 | hi1) + zext(RS32src * RT32src);
+    lo1 = zext(prod[0,32]);
+    hi1 = zext(prod[32,32]);
+    RD = lo1;
+}
 
-    # 0111 0000 0000 0000 dddd d000 0001 0000
-    :mfhi1 RD    is microMode=0 & RD & rs=0 & rt=0 & zero5=0 & fct=16 {
-        RD = hi1;
-    }
+# 0111 0000 0000 0000 dddd d000 0001 0000
+:mfhi1 RD    is RD & rs=0 & rt=0 & zero5=0 & fct=16 {
+    RD = hi1;
+}
 
-    # 0111 00ss sss0 0000 0000 0000 0001 0001
-    :mthi1 RSsrc    is microMode=0 & RSsrc & rt=0 & rd=0 & zero5=0 & fct=17 {
-        hi1 = RSsrc;
-    }
+# 0111 00ss sss0 0000 0000 0000 0001 0001
+:mthi1 RSsrc    is RSsrc & rt=0 & rd=0 & zero5=0 & fct=17 {
+    hi1 = RSsrc;
+}
 
-    # 0111 00ss sss0 0000 0000 0000 0001 0001
-    :clear hi1    is microMode=0 & RSsrc & hi1 & rs=0 & rt=0 & rd=0 & zero5=0 & fct=17 {
-        hi1 = 0;
-    }
+# 0111 00ss sss0 0000 0000 0000 0001 0001
+:clear hi1    is RSsrc & hi1 & rs=0 & rt=0 & rd=0 & zero5=0 & fct=17 {
+    hi1 = 0;
+}
 
-    # 0111 0000 0000 0000 dddd d000 0001 0010
-    :mflo1 RD    is microMode=0 & RD & rs=0 & rt=0 & zero5=0 & fct=18 {
-        RD = lo1;
-    }
+# 0111 0000 0000 0000 dddd d000 0001 0010
+:mflo1 RD    is RD & rs=0 & rt=0 & zero5=0 & fct=18 {
+    RD = lo1;
+}
 
-    # 0111 00ss sss0 0000 0000 0000 0001 0011
-    :mtlo1 RSsrc    is microMode=0 & RSsrc & rt=0 & rd=0 & zero5=0 & fct=19 {
-        lo1 = RSsrc;
-    }
+# 0111 00ss sss0 0000 0000 0000 0001 0011
+:mtlo1 RSsrc    is RSsrc & rt=0 & rd=0 & zero5=0 & fct=19 {
+    lo1 = RSsrc;
+}
 
-    # 0111 00ss sss0 0000 0000 0000 0001 0011
-    :clear lo1    is microMode=0 & RSsrc & lo1 & rs=0 & rt=0 & rd=0 & zero5=0 & fct=19 {
-        lo1 = 0;
-    }
+# 0111 00ss sss0 0000 0000 0000 0001 0011
+:clear lo1    is RSsrc & lo1 & rs=0 & rt=0 & rd=0 & zero5=0 & fct=19 {
+    lo1 = 0;
+}
 
-    :mult1 RD, RS32src, RT32src    is microMode=0 & RD & RS32src & RT32src & zero5=0 & fct=24 {
-        prod:8 = sext(RS32src * RT32src);
-        lo1 = sext(prod[0,32]);
-        hi1 = sext(prod[32,32]);
-        RD = lo1;
-    }
+:mult1 RD, RS32src, RT32src    is RD & RS32src & RT32src & zero5=0 & fct=24 {
+    prod:8 = sext(RS32src * RT32src);
+    lo1 = sext(prod[0,32]);
+    hi1 = sext(prod[32,32]);
+    RD = lo1;
+}
 
-    :mult1 RS32src, RT32src    is microMode=0 & rd=0 & RS32src & RT32src & zero5=0 & fct=24 {
-        prod:8 = sext(RS32src * RT32src);
-        lo1 = sext(prod[0,32]);
-        hi1 = sext(prod[32,32]);
-    }
+:mult1 RS32src, RT32src    is rd=0 & RS32src & RT32src & zero5=0 & fct=24 {
+    prod:8 = sext(RS32src * RT32src);
+    lo1 = sext(prod[0,32]);
+    hi1 = sext(prod[32,32]);
+}
 
-    :multu1 RD, RS32src, RT32src    is microMode=0 & RD & RS32src & RT32src & zero5=0 & fct=25 {
-        prod:8 = zext(RS32src * RT32src);
-        lo1 = zext(prod[0,32]);
-        hi1 = zext(prod[32,32]);
-        RD = lo1;
-    }
+:multu1 RD, RS32src, RT32src    is RD & RS32src & RT32src & zero5=0 & fct=25 {
+    prod:8 = zext(RS32src * RT32src);
+    lo1 = zext(prod[0,32]);
+    hi1 = zext(prod[32,32]);
+    RD = lo1;
+}
 
-    :multu1 RS32src, RT32src    is microMode=0 & rd=0 & RS32src & RT32src & zero5=0 & fct=25 {
-        prod:8 = zext(RS32src * RT32src);
-        lo1 = zext(prod[0,32]);
-        hi1 = zext(prod[32,32]);
-    }
+:multu1 RS32src, RT32src    is rd=0 & RS32src & RT32src & zero5=0 & fct=25 {
+    prod:8 = zext(RS32src * RT32src);
+    lo1 = zext(prod[0,32]);
+    hi1 = zext(prod[32,32]);
+}
 
-    # special case of paddub, move quad word
-    :moveq RD128, RS128src    is microMode=0 & RS128src & RD128 & rt=0 & mmiop=24 & fct=40 {
-        RD128[0,64] = RS128src[0,64];
-        RD128[64,64] = RS128src[64,64];
-    }
+# special case of paddub, move quad word
+:moveq RD128, RS128src    is RS128src & RD128 & rt=0 & mmiop=24 & fct=40 {
+    RD128[0,64] = RS128src[0,64];
+    RD128[64,64] = RS128src[64,64];
+}
 
-    # special case of paddub, move quad word
-    :clear RD128    is microMode=0 & rs=0 & RD128 & rt=0 & mmiop=24 & fct=40 {
-        RD128[0,8] = 0:1;
-        RD128[8,8] = 0:1;
-        RD128[16,8] = 0:1;
-        RD128[24,8] = 0:1;
-        RD128[32,8] = 0:1;
-        RD128[40,8] = 0:1;
-        RD128[48,8] = 0:1;
-        RD128[56,8] = 0:1;
-        RD128[64,8] = 0:1;
-        RD128[72,8] = 0:1;
-        RD128[80,8] = 0:1;
-        RD128[88,8] = 0:1;
-        RD128[96,8] = 0:1;
-        RD128[104,8] = 0:1;
-        RD128[112,8] = 0:1;
-        RD128[120,8] = 0:1;
-    }
+# special case of paddub, move quad word
+:clear RD128    is rs=0 & RD128 & rt=0 & mmiop=24 & fct=40 {
+    RD128[0,8] = 0:1;
+    RD128[8,8] = 0:1;
+    RD128[16,8] = 0:1;
+    RD128[24,8] = 0:1;
+    RD128[32,8] = 0:1;
+    RD128[40,8] = 0:1;
+    RD128[48,8] = 0:1;
+    RD128[56,8] = 0:1;
+    RD128[64,8] = 0:1;
+    RD128[72,8] = 0:1;
+    RD128[80,8] = 0:1;
+    RD128[88,8] = 0:1;
+    RD128[96,8] = 0:1;
+    RD128[104,8] = 0:1;
+    RD128[112,8] = 0:1;
+    RD128[120,8] = 0:1;
+}
 
-    # special case of padduw
-    :moveq RD128, RS128src    is microMode=0 & RS128src & RD128 & rt=0 & mmiop=16 & fct=40 {
-        RD128[0,64] = RS128src[0,64];
-        RD128[64,64] = RS128src[64,64];
-    }
+# special case of padduw
+:moveq RD128, RS128src    is RS128src & RD128 & rt=0 & mmiop=16 & fct=40 {
+    RD128[0,64] = RS128src[0,64];
+    RD128[64,64] = RS128src[64,64];
+}
 
-    # special case of paddb
-    :moveq RD128, RS128src    is microMode=0 & RD128 & RS128src & rt=0 & mmiop=8 & fct=8 {
-        RD128[0,64] = RS128src[0,64];
-        RD128[64,64] = RS128src[64,64];
-    }
+# special case of paddb
+:moveq RD128, RS128src    is RD128 & RS128src & rt=0 & mmiop=8 & fct=8 {
+    RD128[0,64] = RS128src[0,64];
+    RD128[64,64] = RS128src[64,64];
+}
 
-    # special case of paddb
-    :clear RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=8 & fct=8 {
-        RD128[0,8] = 0:1;
-        RD128[8,8] = 0:1;
-        RD128[16,8] = 0:1;
-        RD128[24,8] = 0:1;
-        RD128[32,8] = 0:1;
-        RD128[40,8] = 0:1;
-        RD128[48,8] = 0:1;
-        RD128[56,8] = 0:1;
-        RD128[64,8] = 0:1;
-        RD128[72,8] = 0:1;
-        RD128[80,8] = 0:1;
-        RD128[88,8] = 0:1;
-        RD128[96,8] = 0:1;
-        RD128[104,8] = 0:1;
-        RD128[112,8] = 0:1;
-        RD128[120,8] = 0:1;
-    }
+# special case of paddb
+:clear RD128    is RD128 & rs=0 & rt=0 & mmiop=8 & fct=8 {
+    RD128[0,8] = 0:1;
+    RD128[8,8] = 0:1;
+    RD128[16,8] = 0:1;
+    RD128[24,8] = 0:1;
+    RD128[32,8] = 0:1;
+    RD128[40,8] = 0:1;
+    RD128[48,8] = 0:1;
+    RD128[56,8] = 0:1;
+    RD128[64,8] = 0:1;
+    RD128[72,8] = 0:1;
+    RD128[80,8] = 0:1;
+    RD128[88,8] = 0:1;
+    RD128[96,8] = 0:1;
+    RD128[104,8] = 0:1;
+    RD128[112,8] = 0:1;
+    RD128[120,8] = 0:1;
+}
 
-    # special case of paddh
-    :moveq RD128, RS128src    is microMode=0 & RD128 & RS128src & rt=0 & mmiop=4 & fct=8 {
-        RD128[0,64] = RS128src[0,64];
-        RD128[64,64] = RS128src[64,64];
-    }
+# special case of paddh
+:moveq RD128, RS128src    is RD128 & RS128src & rt=0 & mmiop=4 & fct=8 {
+    RD128[0,64] = RS128src[0,64];
+    RD128[64,64] = RS128src[64,64];
+}
 
-    # special case of paddh
-    :clear RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=4 & fct=8 {
-        RD128[0,16] = 0:2;
-        RD128[16,16] = 0:2;
-        RD128[32,16] = 0:2;
-        RD128[48,16] = 0:2;
-        RD128[64,16] = 0:2;
-        RD128[80,16] = 0:2;
-        RD128[96,16] = 0:2;
-        RD128[112,16] = 0:2;
-    }
+# special case of paddh
+:clear RD128    is RD128 & rs=0 & rt=0 & mmiop=4 & fct=8 {
+    RD128[0,16] = 0:2;
+    RD128[16,16] = 0:2;
+    RD128[32,16] = 0:2;
+    RD128[48,16] = 0:2;
+    RD128[64,16] = 0:2;
+    RD128[80,16] = 0:2;
+    RD128[96,16] = 0:2;
+    RD128[112,16] = 0:2;
+}
 
-    # special case of paddw
-    :moveq RD128, RS128src    is microMode=0 & RD128 & RS128src & rt=0 & mmiop=0 & fct=0x8 {
-        RD128[0,64] = RS128src[0,64];
-        RD128[64,64] = RS128src[64,64];
-    }
+# special case of paddw
+:moveq RD128, RS128src    is RD128 & RS128src & rt=0 & mmiop=0 & fct=0x8 {
+    RD128[0,64] = RS128src[0,64];
+    RD128[64,64] = RS128src[64,64];
+}
 
-    # special case of paddw
-    :clear RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0 & fct=0x8 {
-        RD128[0,32] = 0:4;
-        RD128[32,32] = 0:4;
-        RD128[64,32] = 0:4;
-        RD128[96,32] = 0:4;
-    }
-    
-    # special case of por
-    :moveq RD128, RS128src    is microMode=0 & RD128 & RS128src & rt=0 & mmiop=0x12 & fct=0x29 {
-        RD128[0,64] = RS128src[0,64];
-        RD128[64,64] = RS128src[64,64];
-    }
+# special case of paddw
+:clear RD128    is RD128 & rs=0 & rt=0 & mmiop=0 & fct=0x8 {
+    RD128[0,32] = 0:4;
+    RD128[32,32] = 0:4;
+    RD128[64,32] = 0:4;
+    RD128[96,32] = 0:4;
+}
 
-    # special case of por
-    :clear RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x12 & fct=0x29 {
-        RD128[0,64] = 0:8;
-        RD128[64,64] = 0:8;
-    }
+# special case of por
+:moveq RD128, RS128src    is RD128 & RS128src & rt=0 & mmiop=0x12 & fct=0x29 {
+    RD128[0,64] = RS128src[0,64];
+    RD128[64,64] = RS128src[64,64];
+}
 
-    # Special Case
-    :clear RD128    is microMode=0 & RD128 & rt=0 & rs=0 & mmiop=0x10 & fct=0x28 {
-        RD128[0,64] = 0;
-        RD128[64,64] = 0;
-    }
+# special case of por
+:clear RD128    is RD128 & rs=0 & rt=0 & mmiop=0x12 & fct=0x29 {
+    RD128[0,64] = 0:8;
+    RD128[64,64] = 0:8;
+}
 
-    :pabsh RD128, RT128src    is microMode=0 & RD128 & RT128src & rs=0 & mmiop=5 & fct=0x28 {
-        RD128[0,16] = abs(RT128src[0,16]);
-        RD128[16,16] = abs(RT128src[16,16]);
-        RD128[32,16] = abs(RT128src[32,16]);
-        RD128[48,16] = abs(RT128src[48,16]);
-        RD128[64,16] = abs(RT128src[64,16]);
-        RD128[80,16] = abs(RT128src[80,16]);
-        RD128[96,16] = abs(RT128src[96,16]);
-        RD128[112,16] = abs(RT128src[112,16]);
-    }
-    :pabsw RD128, RT128src    is microMode=0 & RD128 & RT128src & rs=0 & mmiop=1 & fct=0x28 {
-        RD128[0,32] = abs(RT128src[0,32]);
-        RD128[32,32] = abs(RT128src[32,32]);
-        RD128[64,32] = abs(RT128src[64,32]);
-        RD128[96,32] = abs(RT128src[96,32]);
-    }
-    :paddb RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=8 & fct=8 {
-        RD128[0,8] = RT128src[0,8] + RS128src[0,8];
-        RD128[8,8] = RT128src[8,8] + RS128src[8,8];
-        RD128[16,8] = RT128src[16,8] + RS128src[16,8];
-        RD128[24,8] = RT128src[24,8] + RS128src[24,8];
-        RD128[32,8] = RT128src[32,8] + RS128src[32,8];
-        RD128[40,8] = RT128src[40,8] + RS128src[40,8];
-        RD128[48,8] = RT128src[48,8] + RS128src[48,8];
-        RD128[56,8] = RT128src[56,8] + RS128src[56,8];
-        RD128[64,8] = RT128src[64,8] + RS128src[64,8];
-        RD128[72,8] = RT128src[72,8] + RS128src[72,8];
-        RD128[80,8] = RT128src[80,8] + RS128src[80,8];
-        RD128[88,8] = RT128src[88,8] + RS128src[88,8];
-        RD128[96,8] = RT128src[96,8] + RS128src[96,8];
-        RD128[104,8] = RT128src[104,8] + RS128src[104,8];
-        RD128[112,8] = RT128src[112,8] + RS128src[112,8];
-        RD128[120,8] = RT128src[120,8] + RS128src[120,8];
-    }
-    :paddh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=4 & fct=8 {
-        RD128[0,16] = RT128src[0,16] + RS128src[0,16];
-        RD128[16,16] = RT128src[16,16] + RS128src[16,16];
-        RD128[32,16] = RT128src[32,16] + RS128src[32,16];
-        RD128[48,16] = RT128src[48,16] + RS128src[48,16];
-        RD128[64,16] = RT128src[64,16] + RS128src[64,16];
-        RD128[80,16] = RT128src[80,16] + RS128src[80,16];
-        RD128[96,16] = RT128src[96,16] + RS128src[96,16];
-        RD128[112,16] = RT128src[112,16] + RS128src[112,16];
-    }
-    :paddsb RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x18 & fct=8 {
-        sSatByte(RD128[0,8], RT128src[0,8] + RS128src[0,8]);
-        sSatByte(RD128[8,8], RT128src[8,8] + RS128src[8,8]);
-        sSatByte(RD128[16,8], RT128src[16,8] + RS128src[16,8]);
-        sSatByte(RD128[24,8], RT128src[24,8] + RS128src[24,8]);
-        sSatByte(RD128[32,8], RT128src[32,8] + RS128src[32,8]);
-        sSatByte(RD128[40,8], RT128src[40,8] + RS128src[40,8]);
-        sSatByte(RD128[48,8], RT128src[48,8] + RS128src[48,8]);
-        sSatByte(RD128[56,8], RT128src[56,8] + RS128src[56,8]);
-        sSatByte(RD128[64,8], RT128src[64,8] + RS128src[64,8]);
-        sSatByte(RD128[72,8], RT128src[72,8] + RS128src[72,8]);
-        sSatByte(RD128[80,8], RT128src[80,8] + RS128src[80,8]);
-        sSatByte(RD128[88,8], RT128src[88,8] + RS128src[88,8]);
-        sSatByte(RD128[96,8], RT128src[96,8] + RS128src[96,8]);
-        sSatByte(RD128[104,8], RT128src[104,8] + RS128src[104,8]);
-        sSatByte(RD128[112,8], RT128src[112,8] + RS128src[112,8]);
-        sSatByte(RD128[120,8], RT128src[120,8] + RS128src[120,8]);
-    }
-    :paddsh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x14 & fct=8 {
-        sSatHalfWord(RD128[0,16], RT128src[0,16] + RS128src[0,16]);
-        sSatHalfWord(RD128[16,16], RT128src[16,16] + RS128src[16,16]);
-        sSatHalfWord(RD128[32,16], RT128src[32,16] + RS128src[32,16]);
-        sSatHalfWord(RD128[48,16], RT128src[48,16] + RS128src[48,16]);
-        sSatHalfWord(RD128[64,16], RT128src[64,16] + RS128src[64,16]);
-        sSatHalfWord(RD128[80,16], RT128src[80,16] + RS128src[80,16]);
-        sSatHalfWord(RD128[96,16], RT128src[96,16] + RS128src[96,16]);
-        sSatHalfWord(RD128[112,16], RT128src[112,16] + RS128src[112,16]);
-    }
-    :paddsw RD128, RS128src, RT128src    is microMode=0 & RD128 & RT128src & RS128src & mmiop=0x10 & fct=0x8 {
-        sSatWord(RD128[0,32], RT128src[0,32] + RS128src[0,32]);
-        sSatWord(RD128[32,32], RT128src[32,32] + RS128src[32,32]);
-        sSatWord(RD128[64,32], RT128src[64,32] + RS128src[64,32]);
-        sSatWord(RD128[96,32], RT128src[96,32] + RS128src[96,32]);
-    }
+# Special Case
+:clear RD128    is RD128 & rt=0 & rs=0 & mmiop=0x10 & fct=0x28 {
+    RD128[0,64] = 0;
+    RD128[64,64] = 0;
+}
+@define row "define pcodeop"
+$(row) _pabsh;    :pabsh RD128, RT128src             is RD128 & RT128src & rs=0x0 & mmiop=0x5 & fct=0x28    { RD128 = _pabsh(RT128src); }
+$(row) _pabsw;    :pabsw RD128, RT128src             is RD128 & RT128src & rs=0x0 & mmiop=0x1 & fct=0x28    { RD128 = _pabsw(RT128src); }
+$(row) _paddb;    :paddb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x8 & fct=0x8   { RD128 = _paddb(RT128src, RS128src); }
+$(row) _paddh;    :paddh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x4 & fct=0x8   { RD128 = _paddh(RT128src, RS128src); }
+$(row) _paddsb;   :paddsb RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x18 & fct=0x8  { RD128 = _paddsb(RT128src, RS128src); }
+$(row) _paddsh;   :paddsh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x14 & fct=0x8  { RD128 = _paddsh(RS128src, RT128src); }
+$(row) _paddsw;   :paddsw RD128, RS128src, RT128src  is RD128 & RT128src & RS128src & mmiop=0x10 & fct=0x8  { RD128 = _paddsw(RS128src, RT128src); }
+$(row) _paddub;   :paddub RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x18 & fct=0x28 { RD128 = _paddub(RS128src, RT128src); }
+$(row) _padduh;   :padduh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x14 & fct=0x28 { RD128 = _padduh(RS128src, RT128src); }
+$(row) _padduw;   :padduw RD128, RS128src, RT128src  is RD128 & RT128src & RS128src & mmiop=0x10 & fct=0x28 { RD128 = _padduw(RS128src, RT128src); }
+$(row) _paddw;    :paddw RD128, RS128src, RT128src   is RD128 & RT128src & RS128src & mmiop=0x0 & fct=0x8   { RD128 = _paddw(RS128src, RT128src); }
+$(row) _padsbh;   :padsbh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x4 & fct=0x28  { RD128 = _padsbh(RS128src, RT128src); }
+$(row) _pand;     :pand RD128, RS128src, RT128src    is RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x9  { RD128 = _pand(RS128src, RT128src); }
+$(row) _pceqb;    :pceqb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0xA & fct=0x28  { RD128 = _pceqb(RS128src, RT128src); }
+$(row) _pceqh;    :pceqh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x6 & fct=0x28  { RD128 = _pceqh(RS128src, RT128src); }
+$(row) _pceqw;    :pceqw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x2 & fct=0x28  { RD128 = _pceqw(RS128src, RT128src); }
+$(row) _pcgtb;    :pcgtb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0xa & fct=0x8   { RD128 = _pcgtb(RS128src, RT128src); }
+$(row) _pcgth;    :pcgth RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x6 & fct=0x8   { RD128 = _pcgth(RS128src, RT128src); }
+$(row) _pcgtw;    :pcgtw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x2 & fct=0x8   { RD128 = _pcgtw(RS128src, RT128src); }
+$(row) _pcpyh;    :pcpyh RD128, RT128src             is RD128 & RT128src & rs=0 & mmiop=0x1b & fct=0x29     { RD128 = _pcpyh(RT128src); }
+$(row) _pcpyld;   :pcpyld RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xe & fct=0x9   { RD128 = _pcpyld(RS128src, RT128src); }
+$(row) _pcpyud;   :pcpyud RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xe & fct=0x29  { RD128 = _pcpyud(RS128src, RT128src); }
+$(row) _pdivbw;   :pdivbw RS128src, RT128src         is RS128src & RT128src & rd=0 & mmiop=0x1d & fct=0x9   { _pdivbw(RS128src, RT128src); } # lo, hi)
+$(row) _pdivuw;   :pdivuw RS128src, RT128src         is RS128src & RT128src & rd=0 & mmiop=0xd & fct=0x29   { _pdivuw(RS128src, RT128src); } # (lo, hi)
+$(row) _pdivw;    :pdivw RS128src, RT128src          is RS128src & RT128src & rd=0 & mmiop=0xd & fct=0x9    { _pdivw(RS128src, RT128src); } # (lo, hi)
+$(row) _pexch;    :pexch RD128, RT128src             is RD128 & RT128src & rs=0 & mmiop=0x1a & fct=0x29     { RD128 = _pexch(RT128src); }
+$(row) _pexcw;    :pexcw RD128, RT128src             is RT128src & RD128 & rs=0 & mmiop=0x1e & fct=0x29     { RD128 = _pexcw(RT128src); }
+$(row) _pexeh;    :pexeh RD128, RT128src             is RT128src & RD128 & rs=0 & mmiop=0x1a & fct=0x9      { RD128 = _pexeh(RT128src); }
+$(row) _pexew;    :pexew RD128, RT128src             is RT128src & RD128 & rs=0 & mmiop=0x1e & fct=0x9      { RD128 = _pexew(RT128src); }
+$(row) _pext5;    :pext5 RD128, RT128src             is RT128src & RD128 & rs=0 & mmiop=0x1e & fct=0x8      { RD128 = _pext5(RT128src); }
+$(row) _pextlb;   :pextlb RD128, RSsrc, RTsrc        is RD128 & RSsrc & RTsrc & mmiop=0x1a & fct=0x8        { RD128 = _pextlb(RSsrc, RTsrc); }
+$(row) _pextlh;   :pextlh RD128, RSsrc, RTsrc        is RD128 & RSsrc & RTsrc & mmiop=0x16 & fct=0x8        { RD128 = _pextlh(RSsrc, RTsrc); }
+$(row) _pextlw;   :pextlw RD128, RSsrc, RTsrc        is RD128 & RSsrc & RTsrc & mmiop=0x12 & fct=0x8        { RD128 = _pextlw(RSsrc, RTsrc); }
+$(row) _pextub;   :pextub RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x1a & fct=0x28 { RD128 = _pextub(RS128src, RT128src); }
+$(row) _pextuh;   :pextuh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x16 & fct=0x28 { RD128 = _pextuh(RS128src, RT128src); }
+$(row) _pextuw;   :pextuw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x28 { RD128 = _pextuw(RS128src, RT128src); }
+$(row) _phmadh;   :phmadh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x11 & fct=0x9  { RD128 = _phmadh(RS128src, RT128src); } # (lo, hi)
+$(row) _phmsdh;   :phmsdh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x15 & fct=0x9  { RD128 = _phmsdh(RS128src, RT128src); } # (lo, hi)
+$(row) _pinteh;   :pinteh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xA & fct=0x29  { RD128 = _pinteh(RS128src, RT128src); }
+$(row) _pinth;    :pinth RD128, RS128src, RT128src   is RD128 & RT128src & RS128src & mmiop=0xA & fct=0x9   { RD128 = _pinth(RS128src, RT128src); }
+$(row) _pmaddh;   :pmaddh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x10 & fct=0x9  { RD128 = _pmaddh(RS128src, RT128src); } # (lo, hi)
+$(row) _pmadduw;  :pmadduw RD128, RS128src, RT128src is RD128 & RS128src & RT128src & mmiop=0x0 & fct=0x29  { RD128 = _pmadduw(RS128src, RT128src); } # (lo, hi)
+$(row) _pmaddw;   :pmaddw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x0 & fct=0x9   { RD128 = _pmaddw(RS128src, RT128src); } # (lo, hi)
+$(row) _pmaxh;    :pmaxh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x7 & fct=0x8   { RD128 = _pmaxh(RS128src, RT128src); }
+$(row) _pmaxw;    :pmaxw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x3 & fct=0x8   { RD128 = _pmaxw(RS128src, RT128src); }
+$(row) _pmfhi;    :pmfhi RD128                       is RD128 & rs=0 & rt=0 & mmiop=0x8 & fct=0x9           { RD128 = _pmfhi(); } # hi
+$(row) _pmfhllh;  :pmfhl.lh RD128                    is RD128 & rs=0 & rt=0 & mmiop=0x3 & fct=0x30          { RD128 = _pmfhllh(); } # (lo, hi)
+$(row) _pmfhllw;  :pmfhl.lw RD128                    is RD128 & rs=0 & rt=0 & mmiop=0x0 & fct=0x30          { RD128 = _pmfhllw(); } # (lo, hi)
+$(row) _pmfhlsh;  :pmfhl.sh RD128                    is RD128 & rs=0 & rt=0 & mmiop=0x4 & fct=0x30          { RD128 = _pmfhlsh(); } # (lo, hi)
+$(row) _pmfhlslw; :pmfhl.slw RD128                   is RD128 & rs=0 & rt=0 & mmiop=0x2 & fct=0x30          { RD128 = _pmfhlslw(); } # (lo, hi)
+$(row) _pmfhluw;  :pmfhl.uw RD128                    is RD128 & rs=0 & rt=0 & mmiop=0x1 & fct=0x30          { RD128 = _pmfhluw(); } # (lo, hi)
+$(row) _pmflo;    :pmflo RD128                       is RD128 & rs=0 & rt=0 & mmiop=0x9 & fct=0x9           { RD128 = _pmflo(lo_qw); }
+$(row) _pminh;    :pminh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x7 & fct=0x28  { RD128 = _pminh(RS128src, RT128src); }
+$(row) _pminw;    :pminw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x3 & fct=0x28  { RD128 = _pminw(RS128src, RT128src); }
+$(row) _pmsubh;   :pmsubh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x14 & fct=0x9  { RD128 = _pmsubh(RS128src, RT128src); } # (lo, hi)
+$(row) _pmsubw;   :pmsubw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x4 & fct=0x9   { RD128 = _pmsubw(RS128src, RT128src); } # (lo, hi)
+$(row) _pmthi;    :pmthi RS128src                    is RS128src & rd=0 & rt=0 & mmiop=0x8 & fct=0x29       { hi_qw = _pmthi(RS128src); }
+$(row) _pmthllw;  :pmthl.lw RS128src                 is RS128src & rd=0 & rt=0 & mmiop=0x0 & fct=0x31       { _pmthllw(RS128src); } # (lo, hi)
+$(row) _pmtlo;    :pmtlo RS128src                    is RS128src & rd=0 & rt=0 & mmiop=0x9 & fct=0x29       { _pmtlo(RS128src); } # (lo, hi)
+$(row) _pmulth;   :pmulth RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x1c & fct=0x9  { RD128 = _pmulth(RS128src, RT128src); } # (lo, hi)
+$(row) _pmultuw;  :pmultuw RD128, RS128src, RT128src is RD128 & RS128src & RT128src & mmiop=0xc & fct=0x29  { RD128 = _pmultuw(RS128src, RT128src); } # (lo, hi)
+$(row) _pnor;     :pnor RD128, RS128src, RT128src    is RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x29 { RD128 = _pnor(RS128src, RT128src); }
+$(row) _por;      :por RD128, RS128src, RT128src     is RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x29 { RD128 = _por(RS128src, RT128src); }
+$(row) _ppac5;    :ppac5 RD128, RT128src             is RD128 & RT128src & rs=0 & mmiop=0x1f & fct=0x8      { RD128 = _ppac5(RT128src); }
+$(row) _ppacb;    :ppacb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x1b & fct=0x8  { RD128 = _ppacb(RS128src, RT128src); }
+$(row) _ppach;    :ppach RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x17 & fct=0x8  { RD128 = _ppach(RS128src, RT128src); }
+$(row) _ppacw;    :ppacw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x8  { RD128 = _ppacw(RS128src, RT128src); }
+$(row) _prevh;    :prevh RD128, RT128src             is RD128 & RT128src & rs=0 & mmiop=0x1b & fct=0x9      { RD128 = _prevh(RT128src); }
+$(row) _prot3w;   :prot3w RD128, RT128src            is RD128 & RT128src & rs=0 & mmiop=0x1f & fct=0x9      { RD128 = _prot3w(RT128src); }
+$(row) _psllh;    :psllh RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x34             { RD128 = _psllh(RT128src, sa:8); }
+$(row) _psllvw;   :psllvw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x2 & fct=0x9   { RD128 = _psllvw(RS128src, RT128src); }
+$(row) _psllw;    :psllw RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x3c             { RD128 = _psllw(RT128src, sa:8); }
+$(row) _psrah;    :psrah RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x37             { RD128 = _psrah(RT128src, sa:8); }
+$(row) _psravw;   :psravw RD128, RT128src, RS128src  is RD128 & RT128src & RS128src & mmiop=0x3 & fct=0x29  { RD128 = _psravw(RT128src, RS128src); }
+$(row) _psraw;    :psraw RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x3f             { RD128 = _psraw(RT128src, sa:8); }
+$(row) _psrlh;    :psrlh RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x36             { RD128 = _psrlh(RT128src, sa:8); }
+$(row) _psrlvw;   :psrlvw RD128, RT128src, RS128src  is RD128 & RT128src & RS128src & mmiop=0x3 & fct=0x9   { RD128 = _psrlvw(RT128src, RS128src); }
+$(row) _psrlw;    :psrlw RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x3e             { RD128 = _psrlw(RT128src, sa:8); }
+$(row) _psubb;    :psubb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x9 & fct=8     { RD128 = _psubb(RS128src, RT128src); }
+$(row) _psubub;   :psubub RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x19 & fct=0x28 { RD128 = _psubub(RS128src, RT128src); }
+$(row) _psubsb;   :psubsb RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x19 & fct=0x8  { RD128 = _psubsb(RS128src, RT128src); }
+$(row) _psubh;    :psubh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x5 & fct=0x8   { RD128 = _psubh(RS128src, RT128src); }
+$(row) _psubuh;   :psubuh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x15 & fct=0x28 { RD128 = _psubuh(RS128src, RT128src); }
+$(row) _psubsh;   :psubsh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x15 & fct=0x8  { RD128 = _psubsh(RS128src, RT128src); }
+$(row) _psubw;    :psubw RD128, RS128src, RT128src   is RD128 & RT128src & RS128src & mmiop=0x1 & fct=0x8   { RD128 = _psubw(RS128src, RT128src); }
+$(row) _psubuw;   :psubuw RD128, RS128src, RT128src  is RD128 & RT128src & RS128src & mmiop=0x11 & fct=0x28 { RD128 = _psubuw(RS128src, RT128src); }
+$(row) _psubsw;   :psubsw RD128, RS128src, RT128src  is RD128 & RT128src & RS128src & mmiop=0x11 & fct=0x8  { RD128 = _psubsw(RS128src, RT128src); }
+$(row) _pxor;     :pxor RD128, RS128src, RT128src    is RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x9  { RD128 = _pxor(RS128src, RT128src); }
+$(row) _qfsrv;    :qfsrv RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x1B & fct=0x28 { RD128 = _qfsrv(RS128src, RT128src); }
+@undef row
 
-    :paddub RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x18 & fct=0x28 {
-        uSatByte(RD128[0,8], RT128src[0,8] + RS128src[0,8]);
-        uSatByte(RD128[8,8], RT128src[8,8] + RS128src[8,8]);
-        uSatByte(RD128[16,8], RT128src[16,8] + RS128src[16,8]);
-        uSatByte(RD128[24,8], RT128src[24,8] + RS128src[24,8]);
-        uSatByte(RD128[32,8], RT128src[32,8] + RS128src[32,8]);
-        uSatByte(RD128[40,8], RT128src[40,8] + RS128src[40,8]);
-        uSatByte(RD128[48,8], RT128src[48,8] + RS128src[48,8]);
-        uSatByte(RD128[56,8], RT128src[56,8] + RS128src[56,8]);
-        uSatByte(RD128[64,8], RT128src[64,8] + RS128src[64,8]);
-        uSatByte(RD128[72,8], RT128src[72,8] + RS128src[72,8]);
-        uSatByte(RD128[80,8], RT128src[80,8] + RS128src[80,8]);
-        uSatByte(RD128[88,8], RT128src[88,8] + RS128src[88,8]);
-        uSatByte(RD128[96,8], RT128src[96,8] + RS128src[96,8]);
-        uSatByte(RD128[104,8], RT128src[104,8] + RS128src[104,8]);
-        uSatByte(RD128[112,8], RT128src[112,8] + RS128src[112,8]);
-        uSatByte(RD128[120,8], RT128src[120,8] + RS128src[120,8]);
-    }
-    :padduh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x14 & fct=0x28 {
-        uSatHalfWord(RD128[0,16], RT128src[0,16] + RS128src[0,16]);
-        uSatHalfWord(RD128[16,16], RT128src[16,16] + RS128src[16,16]);
-        uSatHalfWord(RD128[32,16], RT128src[32,16] + RS128src[32,16]);
-        uSatHalfWord(RD128[48,16], RT128src[48,16] + RS128src[48,16]);
-        uSatHalfWord(RD128[64,16], RT128src[64,16] + RS128src[64,16]);
-        uSatHalfWord(RD128[80,16], RT128src[80,16] + RS128src[80,16]);
-        uSatHalfWord(RD128[96,16], RT128src[96,16] + RS128src[96,16]);
-        uSatHalfWord(RD128[112,16], RT128src[112,16] + RS128src[112,16]);
-    }
-    :padduw RD128, RS128src, RT128src    is microMode=0 & RD128 & RT128src & RS128src & mmiop=0x10 & fct=0x28 {
-        uSatWord(RD128[0,32], RT128src[0,32] + RS128src[0,32]);
-        uSatWord(RD128[32,32], RT128src[32,32] + RS128src[32,32]);
-        uSatWord(RD128[64,32], RT128src[64,32] + RS128src[64,32]);
-        uSatWord(RD128[96,32], RT128src[96,32] + RS128src[96,32]);
-    }
-    :paddw RD128, RS128src, RT128src    is microMode=0 & RD128 & RT128src & RS128src & mmiop=0 & fct=0x8 {
-        RD128[0,32] = RT128src[0,32] + RS128src[0,32];
-        RD128[32,32] = RT128src[32,32] + RS128src[32,32];
-        RD128[64,32] = RT128src[64,32] + RS128src[64,32];
-        RD128[96,32] = RT128src[96,32] + RS128src[96,32];
-    }
-    :padsbh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=4 & fct=0x28 {
-        RD128[0,16] = RS128src[0,16] - RT128src[0,16];
-        RD128[16,16] = RS128src[16,16] - RT128src[16,16];
-        RD128[32,16] = RS128src[32,16] - RT128src[32,16];
-        RD128[48,16] = RS128src[48,16] - RT128src[48,16];
-        RD128[64,16] = RT128src[64,16] + RS128src[64,16];
-        RD128[80,16] = RT128src[80,16] + RS128src[80,16];
-        RD128[96,16] = RT128src[96,16] + RS128src[96,16];
-        RD128[112,16] = RT128src[112,16] + RS128src[112,16];
-    }
-    :pand RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x9 {
-        RD128 = RT128src & RS128src;
-    }
-    :pceqb RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0xA & fct=0x28 {
-        pEqual(RD128[0,8], RT128src[0,8], RS128src[0,8]);
-        pEqual(RD128[8,8], RT128src[8,8], RS128src[8,8]);
-        pEqual(RD128[16,8], RT128src[16,8], RS128src[16,8]);
-        pEqual(RD128[24,8], RT128src[24,8], RS128src[24,8]);
-        pEqual(RD128[32,8], RT128src[32,8], RS128src[32,8]);
-        pEqual(RD128[40,8], RT128src[40,8], RS128src[40,8]);
-        pEqual(RD128[48,8], RT128src[48,8], RS128src[48,8]);
-        pEqual(RD128[56,8], RT128src[56,8], RS128src[56,8]);
-        pEqual(RD128[64,8], RT128src[64,8], RS128src[64,8]);
-        pEqual(RD128[72,8], RT128src[72,8], RS128src[72,8]);
-        pEqual(RD128[80,8], RT128src[80,8], RS128src[80,8]);
-        pEqual(RD128[88,8], RT128src[88,8], RS128src[88,8]);
-        pEqual(RD128[96,8], RT128src[96,8], RS128src[96,8]);
-        pEqual(RD128[104,8], RT128src[104,8], RS128src[104,8]);
-        pEqual(RD128[112,8], RT128src[112,8], RS128src[112,8]);
-        pEqual(RD128[120,8], RT128src[120,8], RS128src[120,8]);
-    }
-    :pceqh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x6 & fct=0x28 {
-        pEqual(RD128[0,16], RT128src[0,16], RS128src[0,16]);
-        pEqual(RD128[16,16], RT128src[16,16], RS128src[16,16]);
-        pEqual(RD128[32,16], RT128src[32,16], RS128src[32,16]);
-        pEqual(RD128[48,16], RT128src[48,16], RS128src[48,16]);
-        pEqual(RD128[64,16], RT128src[64,16], RS128src[64,16]);
-        pEqual(RD128[80,16], RT128src[80,16], RS128src[80,16]);
-        pEqual(RD128[96,16], RT128src[96,16], RS128src[96,16]);
-        pEqual(RD128[112,16], RT128src[112,16], RS128src[112,16]);
-    }
-    :pceqw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x2 & fct=0x28 {
-        pEqual(RD128[0,32], RT128src[0,32], RS128src[0,32]);
-        pEqual(RD128[32,32], RT128src[32,32], RS128src[32,32]);
-        pEqual(RD128[64,32], RT128src[64,32], RS128src[64,32]);
-        pEqual(RD128[96,32], RT128src[96,32], RS128src[96, 32]);
-    }
-    :pcgtb RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0xA & fct=0x8 {
-        pGreaterThan(RD128[0,8], RS128src[0,8], RT128src[0,8]);
-        pGreaterThan(RD128[8,8], RS128src[8,8], RT128src[8,8]);
-        pGreaterThan(RD128[16,8], RS128src[16,8], RT128src[16,8]);
-        pGreaterThan(RD128[24,8], RS128src[24,8], RT128src[24,8]);
-        pGreaterThan(RD128[32,8], RS128src[32,8], RT128src[32,8]);
-        pGreaterThan(RD128[40,8], RS128src[40,8], RT128src[40,8]);
-        pGreaterThan(RD128[48,8], RS128src[48,8], RT128src[48,8]);
-        pGreaterThan(RD128[56,8], RS128src[56,8], RT128src[56,8]);
-        pGreaterThan(RD128[64,8], RS128src[64,8], RT128src[64,8]);
-        pGreaterThan(RD128[72,8], RS128src[72,8], RT128src[72,8]);
-        pGreaterThan(RD128[80,8], RS128src[80,8], RT128src[80,8]);
-        pGreaterThan(RD128[88,8], RS128src[88,8], RT128src[88,8]);
-        pGreaterThan(RD128[96,8], RS128src[96,8], RT128src[96,8]);
-        pGreaterThan(RD128[104,8], RS128src[104,8], RT128src[104,8]);
-        pGreaterThan(RD128[112,8], RS128src[112,8], RT128src[112,8]);
-        pGreaterThan(RD128[120,8], RS128src[120,8], RT128src[120,8]);
-    }
-    :pcgth RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x6 & fct=0x8 {
-        pGreaterThan(RD128[0,16], RS128src[0,16], RT128src[0,16]);
-        pGreaterThan(RD128[16,16], RS128src[16,16], RT128src[16,16]);
-        pGreaterThan(RD128[32,16], RS128src[32,16], RT128src[32,16]);
-        pGreaterThan(RD128[48,16], RS128src[48,16], RT128src[48,16]);
-        pGreaterThan(RD128[64,16], RS128src[64,16], RT128src[64,16]);
-        pGreaterThan(RD128[80,16], RS128src[80,16], RT128src[80,16]);
-        pGreaterThan(RD128[96,16], RS128src[96,16], RT128src[96,16]);
-        pGreaterThan(RD128[112,16], RS128src[112,16], RT128src[112,16]);
-    }
-    :pcgtw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x2 & fct=0x8 {
-        pGreaterThan(RD128[0,32], RS128src[0,32], RT128src[0,32]);
-        pGreaterThan(RD128[32,32], RS128src[32,32], RT128src[32,32]);
-        pGreaterThan(RD128[64,32], RS128src[64,32], RT128src[64,32]);
-        pGreaterThan(RD128[96,32], RS128src[96,32], RT128src[96,32]);
-    }
-    :pcpyh RD128, RT128src    is microMode=0 & RD128 & RT128src & rs=0 & mmiop=0x1B & fct=0x29 {
-        RD128[0,16] = RT128src[0,16];
-        RD128[16,16] = RT128src[0,16];
-        RD128[32,16] = RT128src[0,16];
-        RD128[48,16] = RT128src[0,16];
-        RD128[64,16] = RT128src[64,16];
-        RD128[80,16] = RT128src[64,16];
-        RD128[96,16] = RT128src[64,16];
-        RD128[112,16] = RT128src[64,16];
-    }
-    :pcpyld RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0xE & fct=0x9 {
-        RD128[64,64] = RS128src[0,64];
-        RD128[0,64] = RT128src[0,64];
-    }
-    :pcpyud RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0xE & fct=0x29 {
-        RD128[0,64] = RS128src[64,64];
-        RD128[64,64] = RT128src[64,64];
-    }
-    :pdivbw RS128src, RT128src    is microMode=0 & RS128src & RT128src & rd=0 & mmiop=0x1D & fct=0x9 {
-        lo[0,32] = RS128src[0,32] s/ sext(RT128src[0,16]);
-        hi[0,32] = RS128src[0,32] s% sext(RT128src[0,16]);
-        lo[32,32] = RS128src[32,32] s/ sext(RT128src[0,16]);
-        hi[32,32] = RS128src[32,32] s% sext(RT128src[0,16]);
-        lo1[0,32] = RS128src[64,32] s/ sext(RT128src[0,16]);
-        hi1[0,32] = RS128src[64,32] s% sext(RT128src[0,16]);
-        lo1[32,32] = RS128src[96,32] s/ sext(RT128src[0,16]);
-        hi1[32,32] = RS128src[96,32] s% sext(RT128src[0,16]);
-    }
-    :pdivuw RS128src, RT128src    is microMode=0 & RS128src & RT128src & rd=0 & mmiop=0xD & fct=0x29 {
-        lo = sext(RS128src[0,32] / RT128src[0,32]);
-        hi = sext(RS128src[0,32] % RT128src[0,32]);
-        lo1 = sext(RS128src[64,32] / RT128src[64,32]);
-        hi1 = sext(RS128src[64,32] % RT128src[64,32]);
-    }
-    :pdivw RS128src, RT128src    is microMode=0 & RS128src & RT128src & rd=0 & mmiop=0xD & fct=0x9 {
-        lo = sext(RS128src[0,32] s/ RT128src[0,32]);
-        hi = sext(RS128src[0,32] s% RT128src[0,32]);
-        lo1 = sext(RS128src[64,32] s/ RT128src[64,32]);
-        hi1 = sext(RS128src[64,32] s% RT128src[64,32]);
-    }
-    :pexch RD128, RT128src    is microMode=0 & RD128 & RT128src & rs=0 & mmiop=0x1A & fct=0x29 {
-        local tmp:2;
-        RD128[0,16] = RT128src[0,16];
-        tmp = RT128src[32,16];
-        RD128[32,16] = RT128src[16,16];
-        RD128[16,16] = tmp;
-        RD128[48,16] = RT128src[48,16];
-        RD128[64,16] = RT128src[64,16];
-        tmp = RT128src[80,16];
-        RD128[80,16] = RT128src[96,16];
-        RD128[96,16] = tmp;
-        RD128[112,16] = RT128src[112,16];
-    }
-    :pexcw RD128, RT128src    is microMode=0 & RT128src & RD128 & rs=0 & mmiop=0x1E & fct=0x29 {
-        local tmp:4;
-        RD128[0,32] = RT128src[0,32];
-        tmp = RT128src[32,32];
-        RD128[32,32] = RT128src[64,32];
-        RD128[64,32] = tmp;
-        RD128[96,32] = RT128src[96,32];
-    }
-    :pexeh RD128, RT128src    is microMode=0 & RT128src & RD128 & rs=0 & mmiop=0x1A & fct=0x9 {
-        local tmp:2;
-        RD128[16,16] = RT128src[16,16];
-        tmp = RT128src[32,16];
-        RD128[32,16] = RT128src[0,16];
-        RD128[0,16] = tmp;
-        RD128[48,16] = RT128src[48,16];
-        RD128[80,16] = RT128src[80,16];
-        tmp = RT128src[96,16];
-        RD128[96,16] = RT128src[64,16];
-        RD128[64,16] = tmp;
-        RD128[112,16] = RT128src[112,16];
-    }
-    :pexew RD128, RT128src    is microMode=0 & RT128src & RD128 & rs=0 & mmiop=0x1E & fct=0x9 {
-        local tmp:4;
-        tmp = RT128src[64,32];
-        RD128[32,32] = RT128src[32,32];
-        RD128[64,32] = RT128src[0,32];
-        RD128[0,32] = tmp;
-        RD128[96,32] = RT128src[96,32];
-    }
-    :pext5 RD128, RT128src    is microMode=0 & RT128src & RD128 & rs=0 & mmiop=0x1E & fct=0x8 {
-        unpack5(RD128[0,32], RT128src[0,32]);
-        unpack5(RD128[32,32], RT128src[32,32]);
-        unpack5(RD128[64,32], RT128src[64,32]);
-        unpack5(RD128[96,32], RT128src[96,32]);
-    }
-    :pextlb RD128, RSsrc, RTsrc    is microMode=0 & RD128 & RSsrc & RTsrc & mmiop=0x1A & fct=0x8 {
-        RD128[120,8] = RSsrc[56,8];
-        RD128[112,8] = RTsrc[56,8];
-        RD128[104,8] = RSsrc[48,8];
-        RD128[96,8] = RTsrc[48,8];
-        RD128[88,8] = RSsrc[40,8];
-        RD128[80,8] = RTsrc[40,8];
-        RD128[72,8] = RSsrc[32,8];
-        RD128[64,8] = RTsrc[32,8];
-        RD128[56,8] = RSsrc[24,8];
-        RD128[48,8] = RTsrc[24,8];
-        RD128[40,8] = RSsrc[16,8];
-        RD128[32,8] = RTsrc[16,8];
-        RD128[24,8] = RSsrc[8,8];
-        RD128[16,8] = RTsrc[8,8];
-        RD128[8,8] = RSsrc[0,8];
-        RD128[0,8] = RTsrc[0,8];
-    }
-    :pextlh RD128, RSsrc, RTsrc    is microMode=0 & RD128 & RSsrc & RTsrc & mmiop=0x16 & fct=0x8 {
-        RD128[112,16] = RSsrc[48,16];
-        RD128[96,16] = RTsrc[48,16];
-        RD128[80,16] = RSsrc[32,16];
-        RD128[64,16] = RTsrc[32,16];
-        RD128[48,16] = RSsrc[16,16];
-        RD128[32,16] = RTsrc[16,16];
-        RD128[16,16] = RSsrc[0,16];
-        RD128[0,16] = RTsrc[0,16];
-    }
-    :pextlw RD128, RSsrc, RTsrc    is microMode=0 & RD128 & RSsrc & RTsrc & mmiop=0x12 & fct=0x8 {
-        RD128[96,32] = RSsrc[32,32];
-        RD128[64,32] = RTsrc[32,32];
-        RD128[32,32] = RSsrc[0,32];
-        RD128[0,32] = RTsrc[0,32];
-    }
-    :pextub RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x1A & fct=0x28 {
-        RD128[0,8] = RT128src[64,8];
-        RD128[8,8] = RS128src[64,8];
-        RD128[16,8] = RT128src[72,8];
-        RD128[24,8] = RS128src[72,8];
-        RD128[32,8] = RT128src[80,8];
-        RD128[40,8] = RS128src[80,8];
-        RD128[48,8] = RT128src[88,8];
-        RD128[56,8] = RS128src[88,8];
-        RD128[64,8] = RT128src[96,8];
-        RD128[72,8] = RS128src[96,8];
-        RD128[80,8] = RT128src[104,8];
-        RD128[88,8] = RS128src[104,8];
-        RD128[96,8] = RT128src[112,8];
-        RD128[104,8] = RS128src[112,8];
-        RD128[112,8] = RT128src[120,8];
-        RD128[120,8] = RS128src[120,8];
-    }
-    :pextuh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x16 & fct=0x28 {
-        RD128[0,16] = RT128src[64,16];
-        RD128[16,16] = RS128src[64,16];
-        RD128[32,16] = RT128src[80,16];
-        RD128[48,16] = RS128src[80,16];
-        RD128[64,16] = RT128src[96,16];
-        RD128[80,16] = RS128src[96,16];
-        RD128[96,16] = RT128src[112,16];
-        RD128[112,16] = RS128src[112,16];
-    }
-    :pextuw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x28 {
-        RD128[0,32] = RT128src[64,32];
-        RD128[32,32] = RS128src[64,32];
-        RD128[64,32] = RT128src[96,32];
-        RD128[96,32] = RS128src[96,32];
-    }
-    :phmadh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x11 & fct=0x9 {
-        lo[0,32] = sext(RS128src[16,16] * RT128src[16,16] + RS128src[0,16] * RT128src[0,16]);
-        RD128[0,32] = lo[0,32];
-        hi[0,32] = sext(RS128src[48,16] * RT128src[48,16] + RS128src[32,16] * RT128src[32,16]);
-        RD128[32,32] = hi[0,32];
+:plzcw RD, RSsrc    is RD & RSsrc & rt=0 & mmiop=0 & fct=0x4 {
+    if (RSsrc[0,32] s< 0) goto <lower_ones>;
+    RD[0,32] = countLeadingZeros(RSsrc[0,32]) - 1;
+    goto <upper>;
+    <lower_ones>
+    RD[0,32] = countLeadingOnes(RSsrc[0,32]) - 1;
+    <upper>
+    if (RSsrc[32,32] s< 0) goto <upper_ones>;
+    RD[32,32] = countLeadingZeros(RSsrc[32,32]) - 1;
+    goto <end>;
+    <upper_ones>
+    RD[32,32] = countLeadingOnes(RSsrc[32,32]) - 1;
+    <end>
+}
 
-        lo1[0,32] = sext(RS128src[80,16] * RT128src[80,16] + RS128src[64,16] * RT128src[64,16]);
-        RD128[64,32] = lo1[0,32];
-        hi1[0,32] = sext(RS128src[112,16] * RT128src[112,16] + RS128src[96,16] * RT128src[96,16]);
-        RD128[96,32] = hi1[0,32];
-    }
-    :phmsdh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x15 & fct=0x9 {
-        lo[0,32] = sext(RS128src[16,16] * RT128src[16,16] - RS128src[0,16] * RT128src[0,16]);
-        RD128[0,32] = lo[0,32];
-        hi[0,32] = sext(RS128src[48,16] * RT128src[48,16] - RS128src[32,16] * RT128src[32,16]);
-        RD128[32,32] = hi[0,32];
-
-        lo1[0,32] = sext(RS128src[80,16] * RT128src[80,16] - RS128src[64,16] * RT128src[64,16]);
-        RD128[64,32] = lo1[0,32];
-        hi1[0,32] = sext(RS128src[112,16] * RT128src[112,16] - RS128src[96,16] * RT128src[96,16]);
-        RD128[96,32] = hi1[0,32];
-    }
-    :pinteh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0xA & fct=0x29 {
-        RD128[112,16] = RS128src[96,16];
-        RD128[96,16] = RT128src[96,16];
-        RD128[80,16] = RS128src[64,16];
-        RD128[64,16] = RT128src[64,16];
-        RD128[48,16] = RS128src[32,16];
-        RD128[32,16] = RT128src[32,16];
-        RD128[16,16] = RS128src[0,16];
-        RD128[0,16] = RT128src[0,16];
-    }
-    :pinth RD128, RS128src, RT128src    is microMode=0 & RD128 & RT128src & RS128src & mmiop=0xA & fct=0x9 {
-        local tmp:2;
-        RD128[0,16] = RT128src[0,16];
-        tmp = RS128src[64,16];
-        RD128[64,16] = RT128src[32,16];
-        RD128[32,16] = RT128src[16,16];
-        RD128[16,16] = tmp;
-        tmp = RS128src[80,16];
-        RD128[80,16] = RS128src[96,16];
-        RD128[96,16] = RT128src[48,16];
-        RD128[48,16] = tmp;
-        RD128[112,16] = RS128src[112,16];
-    }
-    :pmaddh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x10 & fct=0x9 {
-        lo[0,32] = lo[0,32] + sext(RT128src[0,16] * RS128src[0,16]);
-        RD128[0,32] = lo[0,32];
-        lo[32,32] = lo[32,32] + sext(RT128src[16,16] * RS128src[16,16]);
-
-        hi[0,32] = hi[0,32] + sext(RT128src[32,16] * RS128src[32,16]);
-        RD128[32,32] = hi[0,32];
-        hi[32,32] = hi[32,32] + sext(RT128src[48,16] * RS128src[48,16]);
-
-        lo1[0,32] = lo1[0,32] + sext(RT128src[64,16] * RS128src[64,16]);
-        RD128[64,32] = lo1[0,32];
-        lo1[32,32] = lo1[32,32] + sext(RT128src[80,16] * RS128src[80,16]);
-
-        hi1[0,32] = hi1[0,32] + sext(RT128src[64,16] * RS128src[64,16]);
-        RD128[96,32] = hi1[0,32];
-        hi1[32,32] = hi1[32,32] + sext(RT128src[80,16] * RS128src[80,16]);
-    }
-    :pmadduw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x0 & fct=0x29 {
-        product:8 = zext(hi[0,32] | lo[0,32]) + zext(RS128src[0,32] * RT128src[0,32]);
-        lo = zext(product[0,32]);
-        hi = zext(product[32,32]);
-        RD128[0,64] = product;
-        product = zext(hi1[0,32] | lo1[0,32]) + zext(RS128src[0,32] * RT128src[0,32]);
-        lo1 = zext(product[0,32]);
-        hi1 = zext(product[32,32]);
-        RD128[64,64] = product;
-    }
-    :pmaddw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x0 & fct=0x9 {
-        product:8 = sext(hi[0,32] | lo[0,32]) + sext(RS128src[0,32] * RT128src[0,32]);
-        lo = sext(product[0,32]);
-        hi = sext(product[32,32]);
-        RD128[0,64] = product;
-        product = sext(hi1[0,32] | lo1[0,32]) + sext(RS128src[0,32] * RT128src[0,32]);
-        lo1 = sext(product[0,32]);
-        hi1 = sext(product[32,32]);
-        RD128[64,64] = product;
-    }
-    :pmaxh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x7 & fct=0x8 {
-        setMax(RD128[0,16], RS128src[0,16], RT128src[0,16]);
-        setMax(RD128[16,16], RS128src[16,16], RT128src[16,16]);
-        setMax(RD128[32,16], RS128src[32,16], RT128src[32,16]);
-        setMax(RD128[48,16], RS128src[48,16], RT128src[48,16]);
-        setMax(RD128[64,16], RS128src[64,16], RT128src[64,16]);
-        setMax(RD128[80,16], RS128src[80,16], RT128src[80,16]);
-        setMax(RD128[96,16], RS128src[96,16], RT128src[96,16]);
-        setMax(RD128[112,16], RS128src[112,16], RT128src[112,16]);
-    }
-    :pmaxh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & rt=0 & mmiop=0x7 & fct=0x8 {
-        setMax(RD128[0,16], RS128src[0,16], 0:2);
-        setMax(RD128[16,16], RS128src[16,16], 0:2);
-        setMax(RD128[32,16], RS128src[32,16], 0:2);
-        setMax(RD128[48,16], RS128src[48,16], 0:2);
-        setMax(RD128[64,16], RS128src[64,16], 0:2);
-        setMax(RD128[80,16], RS128src[80,16], 0:2);
-        setMax(RD128[96,16], RS128src[96,16], 0:2);
-        setMax(RD128[112,16], RS128src[112,16], 0:2);
-    }
-    :pmaxw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x3 & fct=0x8 {
-        setMax(RD128[0,32], RS128src[0,32], RT128src[0,32]);
-        setMax(RD128[32,32], RS128src[32,32], RT128src[32,32]);
-        setMax(RD128[64,32], RS128src[64,32], RT128src[64,32]);
-        setMax(RD128[96,32], RS128src[96,32], RT128src[96,32]);
-    }
-    :pmfhi RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x8 & fct=0x9 {
-        RD128[0,64] = hi;
-        RD128[64,64] = hi1;
-    }
-    :pmfhl.lh RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x3 & fct=0x30 {
-        RD128[0,16] = lo[0,16];
-        RD128[16,16] = lo[48,16];
-        RD128[32,16] = hi[0,16];
-        RD128[48,16] = hi[48,16];
-        RD128[64,16] = lo1[0,16];
-        RD128[80,16] = lo1[48,16];
-        RD128[96,16] = hi1[0,16];
-        RD128[112,16] = hi1[48,16];
-    }
-    :pmfhl.lw RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x0 & fct=0x30 {
-        RD128[0,32] = lo[0,32];
-        RD128[32,32] = hi[0,32];
-        RD128[64,32] = lo1[0,32];
-        RD128[96,32] = hi1[0,32];
-    }
-    :pmfhl.sh RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x4 & fct=0x30 {
-        clampWord(RD128[0,16], lo[0,32]);
-        clampWord(RD128[16,16], lo[32,32]);
-        clampWord(RD128[32,16], hi[0,32]);
-        clampWord(RD128[48,16], hi[32,32]);
-        clampWord(RD128[64,16], lo1[0,32]);
-        clampWord(RD128[80,16], lo1[32,32]);
-        clampWord(RD128[96,16], hi1[0,32]);
-        clampWord(RD128[112,16], hi1[32,32]);
-    }
-    :pmfhl.slw RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x2 & fct=0x30 {
-        clampLongWordSext(RD128[0,64], sext(lo:4 | hi:4));
-        clampLongWordSext(RD128[64,64], sext(lo1:4 | hi1:4));
-    }
-    :pmfhl.uw RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x1 & fct=0x30 {
-        RD128[0,32] = lo[32,32];
-        RD128[32,32] = hi[32,32];
-        RD128[64,32] = lo1[32,32];
-        RD128[96,32] = hi1[32,32];
-    }
-    :pmflo RD128    is microMode=0 & RD128 & rs=0 & rt=0 & mmiop=0x9 & fct=0x9 {
-        RD128[0,64] = lo;
-        RD128[64,64] = lo1;
-    }
-    :pminh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x7 & fct=0x28 {
-        setMin(RD128[0,16], RS128src[0,16], RT128src[0,16]);
-        setMin(RD128[16,16], RS128src[16,16], RT128src[16,16]);
-        setMin(RD128[32,16], RS128src[32,16], RT128src[32,16]);
-        setMin(RD128[48,16], RS128src[48,16], RT128src[48,16]);
-        setMin(RD128[64,16], RS128src[64,16], RT128src[64,16]);
-        setMin(RD128[80,16], RS128src[80,16], RT128src[80,16]);
-        setMin(RD128[96,16], RS128src[96,16], RT128src[96,16]);
-        setMin(RD128[112,16], RS128src[112,16], RT128src[112,16]);
-    }
-    :pminw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x3 & fct=0x28 {
-        setMin(RD128[0,32], RS128src[0,32], RT128src[0,32]);
-        setMin(RD128[32,32], RS128src[32,32], RT128src[32,32]);
-        setMin(RD128[64,32], RS128src[64,32], RT128src[64,32]);
-        setMin(RD128[96,32], RS128src[96,32], RT128src[96,32]);
-    }
-    :pmsubh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x14 & fct=0x9 {
-        lo[0,32] = lo[0,32] - sext(RT128src[0,16] * RS128src[0,16]);
-        RD128[0,32] = lo[0,32];
-        lo[32,32] = lo[32,32] - sext(RT128src[16,16] * RS128src[16,16]);
-
-        hi[0,32] = hi[0,32] - sext(RT128src[32,16] * RS128src[32,16]);
-        RD128[32,32] = hi[0,32];
-        hi[32,32] = hi[32,32] - sext(RT128src[48,16] * RS128src[48,16]);
-
-        lo1[0,32] = lo1[0,32] - sext(RT128src[64,16] * RS128src[64,16]);
-        RD128[64,32] = lo1[0,32];
-        lo1[32,32] = lo1[32,32] - sext(RT128src[80,16] * RS128src[80,16]);
-
-        hi1[0,32] = hi1[0,32] - sext(RT128src[64,16] * RS128src[64,16]);
-        RD128[96,32] = hi1[0,32];
-        hi1[32,32] = hi1[32,32] - sext(RT128src[80,16] * RS128src[80,16]);
-    }
-    :pmsubw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x4 & fct=0x9 {
-        product:8 = sext(hi[0,32] | lo[0,32]) - sext(RS128src[0,32] * RT128src[0,32]);
-        lo = sext(product[0,32]);
-        hi = sext(product[32,32]);
-        RD128[0,64] = product;
-        product = sext(hi1[0,32] | lo1[0,32]) - sext(RS128src[0,32] * RT128src[0,32]);
-        lo1 = sext(product[0,32]);
-        hi1 = sext(product[32,32]);
-        RD128[64,64] = product;
-    }
-    :pmthi RS128src    is microMode=0 & RS128src & rd=0 & rt=0 & mmiop=0x8 & fct=0x29 {
-        hi = RS128src[0,64];
-        hi1 = RS128src[64,64];
-    }
-    :pmthl.lw RS128src    is microMode=0 & RS128src & rd=0 & rt=0 & mmiop=0x0 & fct=0x31 {
-        lo[0,32] = RS128src[0,32];
-        hi[0,32] = RS128src[32,32];
-        lo1[0,32] = RS128src[64,32];
-        hi1[0,32] = RS128src[96,32];
-    }
-    :pmtlo RS128src    is microMode=0 & RS128src & rd=0 & rt=0 & mmiop=0x9 & fct=0x29 {
-        lo = RS128src[0,64];
-        lo1 = RS128src[64,64];
-    }
-    :pmulth RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x1C & fct=0x9 {
-        lo[0,32] = sext(RS128src[0,16] * RT128src[0,16]);
-        RD128[0,32] = lo[0,32];
-
-        lo[32,32] = sext(RS128src[16,16] * RT128src[16,16]);
-
-        hi[0,32] = sext(RS128src[32,16] * RT128src[32,16]);
-        RD128[32,32] = hi[0,32];
-
-        hi[32,32] = sext(RS128src[48,16] * RT128src[48,16]);
-
-        lo1[0,32] = sext(RS128src[64,16] * RT128src[64,16]);
-        RD128[64,32] = lo1[0,32];
-
-        lo1[32,32] = sext(RS128src[80,16] * RT128src[80,16]);
-
-        hi1[0,32] = sext(RS128src[96,16] * RT128src[96,16]);
-        RD128[96,32] = hi1[0,32];
-
-        hi1[32,32] = sext(RS128src[112,16] * RT128src[112,16]);
-    }
-    :pmultuw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0xC & fct=0x29 {
-        RD128[0,64] = zext(RS128src[0,32] * RT128src[0,32]);
-        lo = zext(RD128[0,32]);
-        hi = zext(RD128[32,32]);
-
-        RD128[64,64] = zext(RS128src[64,32] * RT128src[64,32]);
-        lo = zext(RD128[64,32]);
-        hi = zext(RD128[96,32]);
-    }
-    :pnor RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x29 {
-        RD128 = ~(RS128src | RT128src);
-    }
-    :por RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x29 {
-        RD128 = (RS128src | RT128src);
-    }
-    :ppac5 RD128, RT128src    is microMode=0 & RD128 & RT128src & rs=0 & mmiop=0x1F & fct=0x8 {
-        pack5(RD128[0,32], RT128src[0,32]);
-        pack5(RD128[32,32], RT128src[32,32]);
-        pack5(RD128[64,32], RT128src[64,32]);
-        pack5(RD128[96,32], RT128src[96,32]);
-    }
-    :ppacb RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x1B & fct=0x8 {
-        local tmpLo:8;
-        local tmpHi:8;
-        tmpLo[0,8] = RT128src[0,8];
-        tmpLo[8,8] = RT128src[16,8];
-        tmpLo[16,8] = RT128src[32,8];
-        tmpLo[24,8] = RT128src[48,8];
-        tmpLo[32,8] = RT128src[64,8];
-        tmpLo[40,8] = RT128src[80,8];
-        tmpLo[48,8] = RT128src[96,8];
-        tmpLo[56,8] = RT128src[112,8];
-        tmpHi[0,8] = RS128src[0,8];
-        tmpHi[8,8] = RS128src[16,8];
-        tmpHi[16,8] = RS128src[32,8];
-        tmpHi[24,8] = RS128src[48,8];
-        tmpHi[32,8] = RS128src[64,8];
-        tmpHi[40,8] = RS128src[80,8];
-        tmpHi[48,8] = RS128src[96,8];
-        tmpHi[56,8] = RS128src[112,8];
-        RD128[0, 64] = tmpLo;
-        RD128[64, 64] = tmpHi;
-    }
-    :ppach RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x17 & fct=0x8 {
-        local tmpLo:8;
-        local tmpHi:8;
-        tmpLo[0,16] = RT128src[0,16];
-        tmpLo[16,16] = RT128src[32,16];
-        tmpLo[32,16] = RT128src[64,16];
-        tmpLo[48,16] = RT128src[96,16];
-        tmpHi[0,16] = RS128src[0,16];
-        tmpHi[16,16] = RS128src[32,16];
-        tmpHi[32,16] = RS128src[64,16];
-        tmpHi[48,16] = RS128src[96,16];
-        RD128[0,64] = tmpLo;
-        RD128[64,64] = tmpHi;
-    }
-    :ppacw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x8 {
-        RD128[96,32] = RS128src[64,32];
-        RD128[32,32] = RT128src[64,32];
-        RD128[64,32] = RS128src[0,32];
-        RD128[0,32] = RT128src[0,32];
-    }
-    :prevh RD128, RT128src    is microMode=0 & RD128 & RT128src & rs=0 & mmiop=0x1B & fct=0x9 {
-        local tmpLo:8;
-        local tmpHi:8;
-        tmpLo[0,16] = RT128src[48,16];
-        tmpLo[16,16] = RT128src[32,16];
-        tmpLo[32,16] = RT128src[16,16];
-        tmpLo[48,16] = RT128src[0,16];
-        tmpHi[0,16] = RT128src[112,16];
-        tmpHi[16,16] = RT128src[96,16];
-        tmpHi[32,16] = RT128src[80,16];
-        tmpHi[48,16] = RT128src[64,16];
-        RD128[0,64] = tmpLo;
-        RD128[64,64] = tmpHi;
-    }
-    :prot3w RD128, RT128src    is microMode=0 & RD128 & RT128src & rs=0 & mmiop=0x1F & fct=0x9 {
-        local tmp:4;
-        tmp = RT128src[32,32];
-        RD128[32,32] = RT128src[64,32];
-        RD128[64,32] = RT128src[0,32];
-        RD128[0,32] = tmp;
-        RD128[96,32] = RT128src[96,32];
-    }
-    :psllh RD128, RT128src, sa    is microMode=0 & RD128 & RT128src & rs=0 & sa & fct=0x34 {
-        RD128[0,16] = RT128src[0,16] << sa;
-        RD128[16,16] = RT128src[16,16] << sa;
-        RD128[32,16] = RT128src[32,16] << sa;
-        RD128[48,16] = RT128src[48,16] << sa;
-        RD128[64,16] = RT128src[64,16] << sa;
-        RD128[80,16] = RT128src[80,16] << sa;
-        RD128[96,16] = RT128src[96,16] << sa;
-        RD128[112,16] = RT128src[112,16] << sa;
-    }
-    :psllvw RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x2 & fct=0x9 {
-        RD128[0,64] = sext(RT128src[0,32] << RS128src[0,5]);
-        RD128[64,64] = sext(RT128src[64,32] << RS128src[64,5]);
-    }
-    :psllw RD128, RT128src, sa    is microMode=0 & RD128 & RT128src & rs=0 & sa & fct=0x3C {
-        RD128[0,32] = zext(RT128src[0,32]) << sa:4;
-        RD128[32,32] = zext(RT128src[32,32]) << sa:4;
-        RD128[64,32] = zext(RT128src[64,32]) << sa:4;
-        RD128[96,32] = zext(RT128src[96,32]) << sa:4;
-    }
-    :psrah RD128, RT128src, sa    is microMode=0 & RD128 & RT128src & rs=0 & sa & fct=0x37 {
-        RD128[0,16] = sext(RT128src[0,16] s>> sa:1);
-        RD128[16,16] = sext(RT128src[16,16] s>> sa:1);
-        RD128[32,16] = sext(RT128src[32,16] s>> sa:1);
-        RD128[48,16] = sext(RT128src[48,16] s>> sa:1);
-        RD128[64,16] = sext(RT128src[64,16] s>> sa:1);
-        RD128[80,16] = sext(RT128src[80,16] s>> sa:1);
-        RD128[96,16] = sext(RT128src[96,16] s>> sa:1);
-        RD128[112,16] = sext(RT128src[112,16] s>> sa:1);
-    }
-    :psravw RD128, RT128src, RS128src    is microMode=0 & RD128 & RT128src & RS128src & mmiop=3 & fct=0x29 {
-        RD128[0,64] = sext(RT128src[0,32] >> RS128src[0,5]);
-        RD128[64,64] = sext(RT128src[64,32] >> RS128src[64,5]);
-    }
-    :psraw RD128, RT128src, sa    is microMode=0 & RD128 & RT128src & rs=0 & sa & fct=0x3F {
-        RD128[0,32] = sext(RT128src[0,32] s>> sa);
-        RD128[32,32] = sext(RT128src[32,32] s>> sa);
-        RD128[64,32] = sext(RT128src[64,32] s>> sa);
-        RD128[96,32] = sext(RT128src[96,32] s>> sa);
-    }
-    :psrlh RD128, RT128src, sa    is microMode=0 & RD128 & RT128src & rs=0 & sa & fct=0x36 {
-        RD128[0,16] = zext(RT128src[0,16] >> sa:1);
-        RD128[16,16] = zext(RT128src[16,16] >> sa:1);
-        RD128[32,16] = zext(RT128src[32,16] >> sa:1);
-        RD128[48,16] = zext(RT128src[48,16] >> sa:1);
-        RD128[64,16] = zext(RT128src[64,16] >> sa:1);
-        RD128[80,16] = zext(RT128src[80,16] >> sa:1);
-        RD128[96,16] = zext(RT128src[96,16] >> sa:1);
-        RD128[112,16] = zext(RT128src[112,16] >> sa:1);
-    }
-    :psrlvw RD128, RT128src, RS128src    is microMode=0 & RD128 & RT128src & RS128src & mmiop=3 & fct=0x9 {
-        RD128[0,64] = zext(RT128src[0,32] >> RS128src[0,5]);
-        RD128[64,64] = zext(RT128src[64,32] >> RS128src[64,5]);
-    }
-    :psrlw RD128, RT128src, sa    is microMode=0 & RD128 & RT128src & rs=0 & sa & fct=0x3E {
-        RD128[0,32] = zext(RT128src[0,32] >> sa:2);
-        RD128[32,32] = zext(RT128src[32,32] >> sa:2);
-        RD128[64,32] = zext(RT128src[64,32] >> sa:2);
-        RD128[96,32] = zext(RT128src[96,32] >> sa:2);
-    }
-    :psubb RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x9 & fct=8 {
-        RD128[0,8] = RS128src[0,8] - RT128src[0,8];
-        RD128[8,8] = RS128src[8,8] - RT128src[8,8];
-        RD128[16,8] = RS128src[16,8] - RT128src[16,8];
-        RD128[24,8] = RS128src[24,8] - RT128src[24,8];
-        RD128[32,8] = RS128src[32,8] - RT128src[32,8];
-        RD128[40,8] = RS128src[40,8] - RT128src[40,8];
-        RD128[48,8] = RS128src[48,8] - RT128src[48,8];
-        RD128[56,8] = RS128src[56,8] - RT128src[56,8];
-        RD128[64,8] = RS128src[64,8] - RT128src[64,8];
-        RD128[72,8] = RS128src[72,8] - RT128src[72,8];
-        RD128[80,8] = RS128src[80,8] - RT128src[80,8];
-        RD128[88,8] = RS128src[88,8] - RT128src[88,8];
-        RD128[96,8] = RS128src[96,8] - RT128src[96,8];
-        RD128[104,8] = RS128src[104,8] - RT128src[104,8];
-        RD128[112,8] = RS128src[112,8] - RT128src[112,8];
-        RD128[120,8] = RS128src[120,8] - RT128src[120,8];
-    }
-    :psubub RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x19 & fct=0x28 {
-        uSatByte(RD128[0,8], RS128src[0,8] - RT128src[0,8]);
-        uSatByte(RD128[8,8], RS128src[8,8] - RT128src[8,8]);
-        uSatByte(RD128[16,8], RS128src[16,8] - RT128src[16,8]);
-        uSatByte(RD128[24,8], RS128src[24,8] - RT128src[24,8]);
-        uSatByte(RD128[32,8], RS128src[32,8] - RT128src[32,8]);
-        uSatByte(RD128[40,8], RS128src[40,8] - RT128src[40,8]);
-        uSatByte(RD128[48,8], RS128src[48,8] - RT128src[48,8]);
-        uSatByte(RD128[56,8], RS128src[56,8] - RT128src[56,8]);
-        uSatByte(RD128[64,8], RS128src[64,8] - RT128src[64,8]);
-        uSatByte(RD128[72,8], RS128src[72,8] - RT128src[72,8]);
-        uSatByte(RD128[80,8], RS128src[80,8] - RT128src[80,8]);
-        uSatByte(RD128[88,8], RS128src[88,8] - RT128src[88,8]);
-        uSatByte(RD128[96,8], RS128src[96,8] - RT128src[96,8]);
-        uSatByte(RD128[104,8], RS128src[104,8] - RT128src[104,8]);
-        uSatByte(RD128[112,8], RS128src[112,8] - RT128src[112,8]);
-        uSatByte(RD128[120,8], RS128src[120,8] - RT128src[120,8]);
-    }
-    :psubsb RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x19 & fct=0x8 {
-        sSatByte(RD128[0,8], RS128src[0,8] - RT128src[0,8]);
-        sSatByte(RD128[8,8], RS128src[8,8] - RT128src[8,8]);
-        sSatByte(RD128[16,8], RS128src[16,8] - RT128src[16,8]);
-        sSatByte(RD128[24,8], RS128src[24,8] - RT128src[24,8]);
-        sSatByte(RD128[32,8], RS128src[32,8] - RT128src[32,8]);
-        sSatByte(RD128[40,8], RS128src[40,8] - RT128src[40,8]);
-        sSatByte(RD128[48,8], RS128src[48,8] - RT128src[48,8]);
-        sSatByte(RD128[56,8], RS128src[56,8] - RT128src[56,8]);
-        sSatByte(RD128[64,8], RS128src[64,8] - RT128src[64,8]);
-        sSatByte(RD128[72,8], RS128src[72,8] - RT128src[72,8]);
-        sSatByte(RD128[80,8], RS128src[80,8] - RT128src[80,8]);
-        sSatByte(RD128[88,8], RS128src[88,8] - RT128src[88,8]);
-        sSatByte(RD128[96,8], RS128src[96,8] - RT128src[96,8]);
-        sSatByte(RD128[104,8], RS128src[104,8] - RT128src[104,8]);
-        sSatByte(RD128[112,8], RS128src[112,8] - RT128src[112,8]);
-        sSatByte(RD128[120,8], RS128src[120,8] - RT128src[120,8]);
-    }
-    :psubh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x5 & fct=0x8 {
-        RD128[0,16] = RS128src[0,16] - RT128src[0,16];
-        RD128[16,16] = RS128src[16,16] - RT128src[16,16];
-        RD128[32,16] = RS128src[32,16] - RT128src[32,16];
-        RD128[48,16] = RS128src[48,16] - RT128src[48,16];
-        RD128[64,16] = RS128src[64,16] - RT128src[64,16];
-        RD128[80,16] = RS128src[80,16] - RT128src[80,16];
-        RD128[96,16] = RS128src[96,16] - RT128src[96,16];
-        RD128[112,16] = RS128src[112,16] - RT128src[112,16];
-    }
-    :psubuh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x15 & fct=0x28 {
-        uSatHalfWord(RD128[0,16], RS128src[0,16] - RT128src[0,16]);
-        uSatHalfWord(RD128[16,16], RS128src[16,16] - RT128src[16,16]);
-        uSatHalfWord(RD128[32,16], RS128src[32,16] - RT128src[32,16]);
-        uSatHalfWord(RD128[48,16], RS128src[48,16] - RT128src[48,16]);
-        uSatHalfWord(RD128[64,16], RS128src[64,16] - RT128src[64,16]);
-        uSatHalfWord(RD128[80,16], RS128src[80,16] - RT128src[80,16]);
-        uSatHalfWord(RD128[96,16], RS128src[96,16] - RT128src[96,16]);
-        uSatHalfWord(RD128[112,16], RS128src[112,16] - RT128src[112,16]);
-    }
-    :psubsh RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x15 & fct=0x8 {
-        sSatHalfWord(RD128[0,16], RS128src[0,16] - RT128src[0,16]);
-        sSatHalfWord(RD128[16,16], RS128src[16,16] - RT128src[16,16]);
-        sSatHalfWord(RD128[32,16], RS128src[32,16] - RT128src[32,16]);
-        sSatHalfWord(RD128[48,16], RS128src[48,16] - RT128src[48,16]);
-        sSatHalfWord(RD128[64,16], RS128src[64,16] - RT128src[64,16]);
-        sSatHalfWord(RD128[80,16], RS128src[80,16] - RT128src[80,16]);
-        sSatHalfWord(RD128[96,16], RS128src[96,16] - RT128src[96,16]);
-        sSatHalfWord(RD128[112,16], RS128src[112,16] - RT128src[112,16]);
-    }
-    :psubw RD128, RS128src, RT128src    is microMode=0 & RD128 & RT128src & RS128src & mmiop=1 & fct=0x8 {
-        RD128[0,32] = RS128src[0,32] - RT128src[0,32];
-        RD128[32,32] = RS128src[32,32] - RT128src[32,32];
-        RD128[64,32] = RS128src[64,32] - RT128src[64,32];
-        RD128[96,32] = RS128src[96,32] - RT128src[96,32];
-    }
-    :psubuw RD128, RS128src, RT128src    is microMode=0 & RD128 & RT128src & RS128src & mmiop=0x11 & fct=0x28 {
-        uSatWord(RD128[0,32], RS128src[0,32] - RT128src[0,32]);
-        uSatWord(RD128[32,32], RS128src[32,32] - RT128src[32,32]);
-        uSatWord(RD128[64,32], RS128src[64,32] - RT128src[64,32]);
-        uSatWord(RD128[96,32], RS128src[96,32] - RT128src[96,32]);
-    }
-    :psubsw RD128, RS128src, RT128src    is microMode=0 & RD128 & RT128src & RS128src & mmiop=0x11 & fct=0x8 {
-        sSatWord(RD128[0,32], RS128src[0,32] - RT128src[0,32]);
-        sSatWord(RD128[32,32], RS128src[32,32] - RT128src[32,32]);
-        sSatWord(RD128[64,32], RS128src[64,32] - RT128src[64,32]);
-        sSatWord(RD128[96,32], RS128src[96,32] - RT128src[96,32]);
-    }
-    :pxor RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x9 {
-        RD128 = (RS128src ^ RT128src);
-    }
-    :qfsrv RD128, RS128src, RT128src    is microMode=0 & RD128 & RS128src & RT128src & mmiop=0x1B & fct=0x28 {
-        if (fsa == 0) goto <special_case>;
-        lshift= 128 - fsa;
-        RD128 = (RS128src << lshift) | (RT128src >> fsa);
-        goto <end>;
-        <special_case>
-        RD128 = RT128src;
-        <end>
-    }
-    :plzcw RD, RSsrc    is microMode=0 & RD & RSsrc & rt=0 & mmiop=0 & fct=0x4 {
-        if (RSsrc[0,32] s< 0) goto <lower_ones>;
-        RD[0,32] = countLeadingZeros(RSsrc[0,32]) - 1;
-        goto <upper>;
-        <lower_ones>
-        RD[0,32] = countLeadingOnes(RSsrc[0,32]) - 1;
-        <upper>
-        if (RSsrc[32,32] s< 0) goto <upper_ones>;
-        RD[32,32] = countLeadingZeros(RSsrc[32,32]) - 1;
-        goto <end>;
-        <upper_ones>
-        RD[32,32] = countLeadingOnes(RSsrc[32,32]) - 1;
-        <end>
-    }
 }

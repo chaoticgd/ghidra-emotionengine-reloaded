@@ -65,190 +65,187 @@ attach names op [
     DHWOIN _ _ _
 ];
 
-with : microMode=0 {
-    # Various cache instructions with different ops
-    # 1011 11bb bbbo oooo iiii iiii iiii iiii
-    :cache op, OFF_BASE                         is prime=47 & OFF_BASE & op {
-        cacheOp(op:1, OFF_BASE);
+# Various cache instructions with different ops
+# 1011 11bb bbbo oooo iiii iiii iiii iiii
+:cache op, OFF_BASE                         is prime=47 & OFF_BASE & op {
+    cacheOp(op:1, OFF_BASE);
+}
+
+with : prime=16 { # COP0
+    # Branch on Coprocessor 0 False
+    # 0100 0001 0000 0000 iiii iiii iiii iiii
+    :bc0f Rel16                                 is copop=8 & op=0 & Rel16 {
+        tmp:1 = getCopCondition(0:1, 0:1);
+        delayslot(1);
+        if (tmp != 0) goto inst_next;
+        goto Rel16;
     }
 
-    with : prime=16 { # COP0
-        # Branch on Coprocessor 0 False
-        # 0100 0001 0000 0000 iiii iiii iiii iiii
-        :bc0f Rel16                                 is copop=8 & op=0 & Rel16 {
-            tmp:1 = getCopCondition(0:1, 0:1);
-            delayslot(1);
-            if (tmp != 0) goto inst_next;
-            goto Rel16;
-        }
-
-        #Branch on Coprocessor 0 False Likely
-        # 0100 0001 0000 0010 iiii iiii iiii iiii
-        :bc0fl Rel16                                is copop=8 & op=2 & Rel16 {
-            tmp:1 = getCopCondition(0:1, 0:1);
-            if (tmp != 0) goto inst_next;
-            delayslot(1);
-            goto Rel16;
-        }
-
-        # Branch on Coprocessor 0 True
-        # 0100 0001 0000 0001 iiii iiii iiii iiii
-        :bc0t                                       is copop=8 & op=1 & Rel16 {
-            tmp:1 = getCopCondition(0:1, 0:1);
-            delayslot(1);
-            if (tmp == 0) goto inst_next;
-            goto Rel16;
-        }
-
-        #Branch on Coprocessor 0 True Likely
-        # 0100 0001 0000 0011 iiii iiii iiii iiii
-        :bc0fl Rel16                                is copop=8 & op=3 & Rel16 {
-            tmp:1 = getCopCondition(0:1, 0:1);
-            if (tmp == 0) goto inst_next;
-            delayslot(1);
-            goto Rel16;
-        }
-
-        # Disable Interrupts
-        #0100 0010 0000 0000 0000 0000 0011 1000
-        :di                                         is bit25=1 & fct=0x39 & copfill=0 {
-            DI();
-        }
-
-        # Enable Interrupts
-        #0100 0010 0000 0000 0000 0000 0011 1000
-        :ei                                         is bit25=1 & fct=0x38 & copfill=0 {
-            EI();
-        }
-
-        # Exception Return
-        # 0100 0010 0000 0000 0000 0000 0001 1000
-        :eret                                       is fct=0x18 & bit25=1 & copfill=0  {
-            return[EPC];
-        }
-
-        # Move from System Control Coprocessor
-        # 0100 0000 000t tttt dddd d000 0000 0sss
-        :mfc0 RT, RD0                               is copop=0 & RT & RD0 & mfcop=0 {
-            RT = sext(RD0);
-        }
-
-        # Move from Debug Registers
-        #
-
-        # Breakpoint Control Register
-        :mfbpc RT                                   is copop=0 & RT & rd=24 & mfcop=0 {
-            RT = sext(BPC);
-        }
-
-        #Data Address Breakpoint Register
-        :mfdab  RT                                  is copop=0 & RT & rd=24 & mfcop=4 {
-            RT = sext(DAB);
-        }
-
-        # Data Address Breakpoint Mask Register
-        :mfdabm RT                                  is copop=0 & RT & rd=24 & mfcop=5 {
-            RT = sext(DABM);
-        }
-
-        # Data value Breakpoint Register
-        :mfdvb RT                                   is copop=0 & RT & rd=24 & mfcop=6 {
-            RT = sext(DVB);
-        }
-
-        # Data Value Breakpoint Mask Register
-        :mfdvbm RT                                  is copop=0 & RT & rd=24 & mfcop=7 {
-            RT = sext(DVBM);
-        }
-
-        # Instruction Address Breakpoint Register
-        :mfiab RT                                   is copop=0 & RT & rd=24 & mfcop=2 {
-            RT = sext(IAB);
-        }
-
-        # Instruction Address Breakpoint Mask Register
-        :mfiabm RT                                  is copop=0 & RT & rd=24 & mfcop=3 {
-            RT = sext(IABM);
-        }
-
-        # Move from Performance Counter
-        :mfpc RT, PCR                               is copop=0 & RT & rd=25 & zero5=0 & PCR & reg0=0 & bit0=1 {
-            RT = sext(PCR);
-        }
-
-        # Move from Performance Event Specifier
-        :mfps RT, 0                                 is copop=0 & RT & rd=25 & zero5=0 & reg=0 & reg0=0 & bit0=0 {
-            RT = sext(PCCR);
-        }
-
-        # Move to System Control Coprocessor
-        # 0100 0000 000t tttt dddd d000 0000 0sss
-        :mtc0 RT32src, RD0                          is copop=4 & RT32src & RD0 & mfcop=0 {
-            RD0 = RT32src;
-        }
-
-        # Move to Debug Registers
-        #
-
-        # Breakpoint Control Register
-        :mtbpc RT32src                              is copop=4 & RT32src & rd=24 & mfcop=0 {
-            BPC = RT32src;
-        }
-
-        #Data Address Breakpoint Register
-        :mtdab  RT32src                             is copop=4 & RT32src & rd=24 & mfcop=4 {
-            DAB = RT32src;
-        }
-
-        # Data Address Breakpoint Mask Register
-        :mtdabm RT32src                             is copop=4 & RT32src & rd=24 & mfcop=5 {
-            DABM = RT32src;
-        }
-
-        # Data value Breakpoint Register
-        :mtdvb RT32src                              is copop=4 & RT32src & rd=24 & mfcop=6 {
-            DVB = RT32src;
-        }
-
-        # Data Value Breakpoint Mask Register
-        :mtdvbm RT32src                             is copop=4 & RT32src & rd=24 & mfcop=7 {
-            DVBM = RT32src;
-        }
-
-        # Instruction Address Breakpoint Register
-        :mtiab RT32src                              is copop=4 & RT32src & rd=24 & mfcop=2 {
-            IAB = RT32src;
-        }
-
-        # Instruction Address Breakpoint Mask Register
-        :mtiabm RT32src                             is copop=4 & RT32src & rd=24 & mfcop=3 {
-            IABM = RT32src;
-        }
-
-        # Probe TLB for Matching Entry
-        :tlbp                                       is bit25=1 & copfill=0 & fct=8 {
-            Index = TLB_probe_for_matching_entry(EntryHi);
-        }
-
-        # Read Indexed TLB Entry
-        :tlbr                                       is bit25=1 & copfill=0 & fct=1 {
-            EntryHi = TLB_read_indexed_entryHi(Index);
-            EntryLo0 = TLB_read_indexed_entryLo0(Index);
-            EntryLo1 = TLB_read_indexed_entryLo1(Index);
-            PageMask = TLB_read_indexed_entryLo1(Index);
-        }
-
-        # Write Index TLB Entry
-        :tlbwi                                      is bit25=1 & copfill=0 & fct=2 {
-            TLB_write_indexed_entry(Index, EntryHi, EntryLo0, EntryLo1, PageMask);
-        }
-
-        # Write Random TLB Entry
-        :tlbwr                                      is bit25=1 & copfill=0 & fct=6 {
-            TLB_write_random_entry(Random, EntryHi, EntryLo0, EntryLo1, PageMask);
-        }
-
-        :cop0 immed26                       is immed26 { }
-
+    #Branch on Coprocessor 0 False Likely
+    # 0100 0001 0000 0010 iiii iiii iiii iiii
+    :bc0fl Rel16                                is copop=8 & op=2 & Rel16 {
+        tmp:1 = getCopCondition(0:1, 0:1);
+        if (tmp != 0) goto inst_next;
+        delayslot(1);
+        goto Rel16;
     }
+
+    # Branch on Coprocessor 0 True
+    # 0100 0001 0000 0001 iiii iiii iiii iiii
+    :bc0t                                       is copop=8 & op=1 & Rel16 {
+        tmp:1 = getCopCondition(0:1, 0:1);
+        delayslot(1);
+        if (tmp == 0) goto inst_next;
+        goto Rel16;
+    }
+
+    #Branch on Coprocessor 0 True Likely
+    # 0100 0001 0000 0011 iiii iiii iiii iiii
+    :bc0fl Rel16                                is copop=8 & op=3 & Rel16 {
+        tmp:1 = getCopCondition(0:1, 0:1);
+        if (tmp == 0) goto inst_next;
+        delayslot(1);
+        goto Rel16;
+    }
+    
+    # Disable Interrupts
+    #0100 0010 0000 0000 0000 0000 0011 1000
+    :di                                         is bit25=1 & fct=0x39 & copfill=0 {
+        DI();
+    }
+
+    # Enable Interrupts
+    #0100 0010 0000 0000 0000 0000 0011 1000
+    :ei                                         is bit25=1 & fct=0x38 & copfill=0 {
+        EI();
+    }
+    
+    # Exception Return
+    # 0100 0010 0000 0000 0000 0000 0001 1000
+    :eret                                       is fct=0x18 & bit25=1 & copfill=0  {
+        return[EPC];
+    }
+
+    # Move from System Control Coprocessor
+    # 0100 0000 000t tttt dddd d000 0000 0sss
+    :mfc0 RT, RD0                               is copop=0 & RT & RD0 & mfcop=0 {
+        RT = sext(RD0);
+    }
+
+    # Move from Debug Registers
+    #
+
+    # Breakpoint Control Register
+    :mfbpc RT                                   is copop=0 & RT & rd=24 & mfcop=0 {
+        RT = sext(BPC);
+    }
+
+    #Data Address Breakpoint Register
+    :mfdab  RT                                  is copop=0 & RT & rd=24 & mfcop=4 {
+        RT = sext(DAB);
+    }
+
+    # Data Address Breakpoint Mask Register
+    :mfdabm RT                                  is copop=0 & RT & rd=24 & mfcop=5 {
+        RT = sext(DABM);
+    }
+
+    # Data value Breakpoint Register
+    :mfdvb RT                                   is copop=0 & RT & rd=24 & mfcop=6 {
+        RT = sext(DVB);
+    }
+
+    # Data Value Breakpoint Mask Register
+    :mfdvbm RT                                  is copop=0 & RT & rd=24 & mfcop=7 {
+        RT = sext(DVBM);
+    }
+    
+    # Instruction Address Breakpoint Register
+    :mfiab RT                                   is copop=0 & RT & rd=24 & mfcop=2 {
+        RT = sext(IAB);
+    }
+    
+    # Instruction Address Breakpoint Mask Register
+    :mfiabm RT                                  is copop=0 & RT & rd=24 & mfcop=3 {
+        RT = sext(IABM);
+    }
+    
+    # Move from Performance Counter
+    :mfpc RT, PCR                               is copop=0 & RT & rd=25 & zero5=0 & PCR & reg0=0 & bit0=1 {
+        RT = sext(PCR);
+    }
+    
+    # Move from Performance Event Specifier
+    :mfps RT, 0                                 is copop=0 & RT & rd=25 & zero5=0 & reg=0 & reg0=0 & bit0=0 {
+        RT = sext(PCCR);
+    }
+    
+    # Move to System Control Coprocessor
+    # 0100 0000 000t tttt dddd d000 0000 0sss
+    :mtc0 RT32src, RD0                          is copop=4 & RT32src & RD0 & mfcop=0 {
+        RD0 = RT32src;
+    }
+    
+    # Move to Debug Registers
+    #
+    
+    # Breakpoint Control Register
+    :mtbpc RT32src                              is copop=4 & RT32src & rd=24 & mfcop=0 {
+        BPC = RT32src;
+    }
+    
+    #Data Address Breakpoint Register
+    :mtdab  RT32src                             is copop=4 & RT32src & rd=24 & mfcop=4 {
+        DAB = RT32src;
+    }
+    
+    # Data Address Breakpoint Mask Register
+    :mtdabm RT32src                             is copop=4 & RT32src & rd=24 & mfcop=5 {
+        DABM = RT32src;
+    }
+    
+    # Data value Breakpoint Register
+    :mtdvb RT32src                              is copop=4 & RT32src & rd=24 & mfcop=6 {
+        DVB = RT32src;
+    }
+    
+    # Data Value Breakpoint Mask Register
+    :mtdvbm RT32src                             is copop=4 & RT32src & rd=24 & mfcop=7 {
+        DVBM = RT32src;
+    }
+    
+    # Instruction Address Breakpoint Register
+    :mtiab RT32src                              is copop=4 & RT32src & rd=24 & mfcop=2 {
+        IAB = RT32src;
+    }
+    
+    # Instruction Address Breakpoint Mask Register
+    :mtiabm RT32src                             is copop=4 & RT32src & rd=24 & mfcop=3 {
+        IABM = RT32src;
+    }
+    
+    # Probe TLB for Matching Entry
+    :tlbp                                       is bit25=1 & copfill=0 & fct=8 {
+        Index = TLB_probe_for_matching_entry(EntryHi);
+    }
+    
+    # Read Indexed TLB Entry
+    :tlbr                                       is bit25=1 & copfill=0 & fct=1 {
+        EntryHi = TLB_read_indexed_entryHi(Index);
+        EntryLo0 = TLB_read_indexed_entryLo0(Index);
+        EntryLo1 = TLB_read_indexed_entryLo1(Index);
+        PageMask = TLB_read_indexed_entryLo1(Index);
+    }
+    
+    # Write Index TLB Entry
+    :tlbwi                                      is bit25=1 & copfill=0 & fct=2 {
+        TLB_write_indexed_entry(Index, EntryHi, EntryLo0, EntryLo1, PageMask);
+    }
+    
+    # Write Random TLB Entry
+    :tlbwr                                      is bit25=1 & copfill=0 & fct=6 {
+        TLB_write_random_entry(Random, EntryHi, EntryLo0, EntryLo1, PageMask);
+    }
+    
+    :cop0 immed26                       is immed26 { }
 }

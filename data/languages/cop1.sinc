@@ -31,7 +31,7 @@ attach variables [ fs_fcr ] [
 	_		fccr	fexr	_		fenr	_		_		fcsr
 ];
 
-with : prime=17 & microMode=0 {  #COP1
+with : prime=17 {  #COP1
 	# 0100 01ff fff0 0000 ssss sddd dd00 0101
 	:abs.S fd, fs               		is fct=5 & format=0x10 & fs & fd {
 	    fd = abs(fs);

@@ -1,58 +1,36 @@
 
+define pcodeop op_setMin;
+define pcodeop op_setMax;
+
+define pcodeop op_clampWord;
+define pcodeop clampLongWordSext;
+define pcodeop op_clampLongWordZext;
+
+define pcodeop op_uSatByte;
+define pcodeop op_uSatHalfWord;
+define pcodeop op_uSatWord;
+define pcodeop op_sSatByte;
+define pcodeop op_sSatHalfWord;
+define pcodeop op_sSatWord;
+define pcodeop op_pEqual;
+define pcodeop op_pGreaterThan;
+define pcodeop op_pack5;
+define pcodeop op_unpack5;
+
 macro setMin(dest,srcRS,srcRT) {
-    if (srcRS s> srcRT) goto <maxRS>;
-    dest = srcRS;
-    goto <end>;
-    <maxRS>
-	dest = srcRT;
-    <end>
+    dest = op_setMin(srcRS, srcRT);
 }
 
 macro setMax(dest,srcRS,srcRT) {
-    if (srcRS s> srcRT) goto <maxRS>;
-    dest = srcRT;
-    goto <end>;
-    <maxRS>
-	dest = srcRS;
-    <end>
+    dest = op_setMax(srcRS, srcRT);
 }
 
 macro clampWord(dest, src){
-    if (src s> 0x7FFF) goto <satMax>;
-    if (src s< 0xFFFF8000) goto <satMin>;
-    dest = src:2;
-    goto <end>;
-    <satMax>
-    dest = 0x7FFF;
-    goto <end>;
-    <satMin>
-    dest = 0x8000;
-    <end>
+    dest = op_clampWord(src);
 }
 
-macro clampLongWordSext(dest, src){
-    if (src s> 0x7FFFFFFF) goto <satMax>;
-    if (src s< 0xFFFFFFFF80000000) goto <satMin>;
-    dest = src;
-    goto <end>;
-    <satMax>
-    dest = 0x7FFFFFFF;
-    goto <end>;
-    <satMin>
-    dest = 0xFFFFFFFF80000000;
-    <end>
-}
 macro clampLongWordZext(dest, src){
-    if (src s> 0x7FFFFFFF) goto <satMax>;
-    if (src s< 0xFFFFFFFF80000000) goto <satMin>;
-    dest = src;
-    goto <end>;
-    <satMax>
-    dest = 0x7FFFFFFF;
-    goto <end>;
-    <satMin>
-    dest = 0x80000000;
-    <end>
+    dest = op_clampLongWordZext(src);
 }
 
 macro multToSignedWord(dest, src1, src2){
@@ -62,69 +40,27 @@ macro multToSignedWord(dest, src1, src2){
 }
 
 macro uSatByte(dest, src){
-    if (src > 0xFF) goto <max>;
-    dest = src;
-    goto <end>;
-    <max>
-    dest = 0xFF;
-    <end>
+    dest = op_uSatByte(src);
 }
 
 macro uSatHalfWord(dest, src){
-    if (src > 0xFFFF) goto <max>;
-    dest[0,2] = src[0,2];
-    goto <end>;
-    <max>
-    dest[0,2] = 0xFFFF;
-    <end>
+    dest = op_uSatHalfWord(src);
 }
 
 macro uSatWord(dest, src){
-    if (src > 0xFFFFFFFF) goto <max>;
-    dest[0,4] = src[0,4];
-    goto <end>;
-    <max>
-    dest[0,4] = 0xFFFFFFFF;
-    <end>
+    dest = op_uSatWord(src);
 }
 
 macro sSatByte(dest, src){
-    if (src > 0x7F) goto <max>;
-    if (0x100 <= src && src < 0x180) goto <min>;
-    dest = src;
-    goto <end>;
-    <max>
-    dest = 0x7F;
-    goto <end>;
-    <min>
-    dest = 0x80;
-    <end>
+    dest = op_uSatByte(src);
 }
 
 macro sSatHalfWord(dest, src){
-    if (src > 0x7FFF) goto <max>;
-    if (0x10000 <= src && src < 0x18000) goto <min>;
-    dest[0,2] = src[0,2];
-    goto <end>;
-    <max>
-    dest[0,2] = 0x7FFF;
-    goto <end>;
-    <min>
-    dest[0,2] = 0x8000;
-    <end>
+    dest = op_sSatHalfWord(src);
 }
 
 macro sSatWord(dest, src){
-    if (src > 0x7FFFFFFF) goto <max>;
-    if (0x10000000 <= src && src < 0x18000000) goto <min>;
-    dest[0,4] = src[0,4];
-    goto <end>;
-    <max>
-    dest[0,4] = 0x7FFFFFFF;
-    goto <end>;
-    <min>
-    dest[0,4] = 0x80000000;
-    <end>
+    dest = op_sSatWord(src);
 }
 
 macro pEqual(dest, src1, src2){
