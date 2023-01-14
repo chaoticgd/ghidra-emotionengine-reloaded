@@ -1,4 +1,4 @@
-# Ghidra Emotion Engine: Reloaded [![run tests](https://github.com/beardypig/ghidra-emotionengine-reloaded/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/actions/workflows/test.yml)
+# Ghidra Emotion Engine: Reloaded [![run tests](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/actions/workflows/test.yml)
 An extension for Ghidra that adds support for the PlayStation 2. Based on the original [ghidra-emotionengine](https://github.com/beardypig/ghidra-emotionengine) project, with a number or changes:
 - Support for Ghidra 10.2.2.
 - The VU macro and MMI instruction implementations have	been replaced with pcodeop stubs, improving decompilation.
