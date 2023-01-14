@@ -32,7 +32,7 @@ jobs:
       - uses: svenstaro/upload-release-action@v1-release
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: dist/*ghidra-emotionengine.zip
+          file: dist/*ghidra-emotionengine-reloaded.zip
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
