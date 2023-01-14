@@ -1,17 +1,17 @@
 # COP2 (VU) macro instruction set
 
-define pcodeop LQC2;
-define pcodeop SQC2;
-define pcodeop BC2F;
-define pcodeop BC2FL;
-define pcodeop BC2T;
-define pcodeop BC2TL;
-define pcodeop CFC2;
-define pcodeop CTC2;
-define pcodeop QMFC2;
-define pcodeop QMTC2;
-define pcodeop VCALLMS;
-define pcodeop VCALLMSR;
+define pcodeop _lqc2;
+define pcodeop _sqc2;
+define pcodeop _bc2f;
+define pcodeop _bc2fl;
+define pcodeop _bc2t;
+define pcodeop _bc2tl;
+define pcodeop _cfc2;
+define pcodeop _ctc2;
+define pcodeop _qmfc2;
+define pcodeop _qmtc2;
+define pcodeop _vcallms;
+define pcodeop _vcallmsr;
 
 # COP2 integer/control registers
 define register offset=0x4000 size=4 [
@@ -137,11 +137,11 @@ vuinst: is prime=18 & vuco=1 { export 0:1; }
 @include "vuupper.sinc"
 
 :lqc2 vuft, OFF_BASE                              is prime=54 & OFF_BASE & vuft {
-    vuft = LQC2(*:16 OFF_BASE);
+    vuft = _lqc2(*:16 OFF_BASE);
 }
 
 :sqc2 vuft, OFF_BASE                              is prime=62 & OFF_BASE & vuft {
-    *:16 OFF_BASE = SQC2(vuft);
+    *:16 OFF_BASE = _sqc2(vuft);
 }
 
 with : prime=18 {
@@ -174,15 +174,15 @@ with : prime=18 {
     }
     
     :cfc2.I RT, vuccid                            is vuop_21_25=0b00010 & RT    & vuccid    & vuop_1_10=0b0000000000 & I
-        { RT = CFC2(vuccid:4); }
+        { RT = _cfc2(vuccid:4); }
     :ctc2.I RTsrc, vuccid                         is vuop_21_25=0b00110 & RTsrc & vuccid    & vuop_1_10=0b0000000000 & I
-        { tmp:4 = CTC2(RTsrc:4); vuccid = tmp; }
+        { tmp:4 = _ctc2(RTsrc:4); vuccid = tmp; }
     :qmfc2.I RT128, vufd_qmc2                     is vuop_21_25=0b00001 & RT128 & vufd_qmc2                          & I
-        { RT128 = QMFC2(vufd_qmc2:4); }
+        { RT128 = _qmfc2(vufd_qmc2:4); }
     :qmtc2.I RT128, vufd_qmc2                     is vuop_21_25=0b00101 & RT128 & vufd_qmc2 & vuop_1_10=0b0000000000 & I
-        { vufd_qmc2 = QMTC2(RT128:4); }
+        { vufd_qmc2 = _qmtc2(RT128:4); }
     :vcallms imm15 "; address =" address          is vuco=1 & vudest=0b0000 & imm15 & vuop_0_5=0b111000 [ address = imm15 * 8; ]
-        { VCALLMS(imm15:4); }
+        { _vcallms(imm15:4); }
     :vcallmsr "vi27"                              is vuco=1 & vudest=0b0000 & vuft=0b00000 & vufs=0b11011 & fd=0b00000 & vuop_0_5=0b111001
-        { VCALLMSR(); }
+        { _vcallmsr(); }
 }
