@@ -66,6 +66,8 @@ public class StabsImporter extends FlatProgramAPI {
 	}
 
 	public boolean doImport() {
+		monitor.setMessage("STABS - Starting...");
+		
 		File elfFile = null;
 		boolean deleteElfAfterwards = false;
 		File jsonFile = null;
@@ -100,6 +102,7 @@ public class StabsImporter extends FlatProgramAPI {
 				ElfExporter exporter = new ElfExporter();
 				if(exporter.canExportDomainObject(program.getClass())) {
 					try {
+						monitor.setMessage("STABS - Writing temporary ELF file...");
 						exporter.export(elfFile, program, null, monitor);
 					} catch (ExporterException | IOException e) {
 						log.appendException(e);
@@ -119,6 +122,7 @@ public class StabsImporter extends FlatProgramAPI {
 			
 			// Run stdump.
 			try {
+				monitor.setMessage("STABS - Running stdump...");
 				jsonOutput = runStdump(elfFile.getAbsolutePath(), monitor, log);
 				if(jsonOutput == null) {
 					if(deleteElfAfterwards) {
@@ -151,6 +155,7 @@ public class StabsImporter extends FlatProgramAPI {
 		}
 		
 		// Parse the JSON file into an AST.
+		monitor.setMessage("STABS - Parsing AST...");
 		StdumpAST.ParsedJsonFile ast;
 		try {
 			ast = StdumpParser.readJson(jsonOutput);
@@ -192,13 +197,19 @@ public class StabsImporter extends FlatProgramAPI {
 	}
 	
 	public void importDataTypes(StdumpAST.ImporterState importer) {
+		int type_count = importer.ast.deduplicatedTypes.size();
+		
+		monitor.setMessage("STABS - Importing data types...");
+		monitor.setMaximum(type_count * 2);
+		monitor.setProgress(0);
+		
 		// Gather information required for type lookup.
 		for(StdumpAST.Node node : importer.ast.files) {
 			StdumpAST.SourceFile file = (StdumpAST.SourceFile) node;
 			importer.stabsTypeNumberToDeduplicatedTypeIndex.add(file.stabsTypeNumberToDeduplicatedTypeIndex);
 		}
 
-		for(int i = 0; i < importer.ast.deduplicatedTypes.size(); i++) {
+		for(int i = 0; i < type_count; i++) {
 			StdumpAST.Node node = importer.ast.deduplicatedTypes.get(i);
 			if(node.name != null && !node.name.isEmpty()) {
 				importer.typeNameToDeduplicatedTypeIndex.put(node.name, i);
@@ -206,7 +217,7 @@ public class StabsImporter extends FlatProgramAPI {
 		}
 
 		// Create all the top-level enums, structs and unions first.
-		for(int i = 0; i < importer.ast.deduplicatedTypes.size(); i++) {
+		for(int i = 0; i < type_count; i++) {
 			StdumpAST.Node node = importer.ast.deduplicatedTypes.get(i);
 			if(node instanceof StdumpAST.InlineEnum) {
 				StdumpAST.InlineEnum inline_enum = (StdumpAST.InlineEnum) node;
@@ -219,10 +230,11 @@ public class StabsImporter extends FlatProgramAPI {
 			} else {
 				importer.types.add(null);
 			}
+			monitor.setProgress(i);
 		}
 
 		// Fill in the structs and unions recursively.
-		for(int i = 0; i < importer.ast.deduplicatedTypes.size(); i++) {
+		for(int i = 0; i < type_count; i++) {
 			StdumpAST.Node node = importer.ast.deduplicatedTypes.get(i);
 			if(node instanceof StdumpAST.InlineStructOrUnion) {
 				StdumpAST.InlineStructOrUnion struct_or_union = (StdumpAST.InlineStructOrUnion) node;
@@ -230,12 +242,17 @@ public class StabsImporter extends FlatProgramAPI {
 				struct_or_union.fill(type, importer);
 				importer.types.set(i, type);
 			}
+			monitor.setProgress(type_count + i);
 		}
 	}
 	
 	public void importFunctions(StdumpAST.ImporterState importer, Program program) {
-		for(StdumpAST.Node node : importer.ast.files) {
-			StdumpAST.SourceFile sourceFile = (StdumpAST.SourceFile) node;
+		monitor.setMessage("STABS - Importing functions...");
+		monitor.setMaximum(importer.ast.files.size());
+		monitor.setProgress(0);
+		
+		for(int i = 0; i < importer.ast.files.size(); i++) {
+			StdumpAST.SourceFile sourceFile = (StdumpAST.SourceFile) importer.ast.files.get(i);
 			for(StdumpAST.Node function_node : sourceFile.functions) {
 				StdumpAST.FunctionDefinition def = (StdumpAST.FunctionDefinition) function_node;
 				StdumpAST.FunctionType type = (StdumpAST.FunctionType) def.type;
@@ -265,6 +282,8 @@ public class StabsImporter extends FlatProgramAPI {
 					fillInLocalVariables(function, importer, def, parameterNames);
 				}
 			}
+			
+			monitor.setProgress(i);
 		}
 	}
 
@@ -382,9 +401,13 @@ public class StabsImporter extends FlatProgramAPI {
 	}
 	
 	public void importGlobalVariables(StdumpAST.ImporterState importer) {
+		monitor.setMessage("STABS - Importing global variables...");
+		monitor.setMaximum(importer.ast.files.size());
+		monitor.setProgress(0);
+		
 		AddressSpace space = getAddressFactory().getDefaultAddressSpace();
-		for(StdumpAST.Node file_node : importer.ast.files) {
-			StdumpAST.SourceFile file = (StdumpAST.SourceFile) file_node;
+		for(int i = 0; i < importer.ast.files.size(); i++) {
+			StdumpAST.SourceFile file = (StdumpAST.SourceFile) importer.ast.files.get(i);
 			for(StdumpAST.Node global_node : file.globals) {
 				StdumpAST.Variable global = (StdumpAST.Variable) global_node;
 				if(global.storage.global_address > -1) {
@@ -402,6 +425,8 @@ public class StabsImporter extends FlatProgramAPI {
 					}
 				}
 			}
+			
+			monitor.setProgress(i);
 		}
 	}
 	
@@ -427,6 +452,7 @@ public class StabsImporter extends FlatProgramAPI {
 		} else {
 			return null;
 		}
+		
 	}
 
 }

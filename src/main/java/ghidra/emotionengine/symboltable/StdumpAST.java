@@ -3,7 +3,6 @@ package ghidra.emotionengine.symboltable;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import ghidra.app.services.ConsoleService;
 import ghidra.app.util.importer.MessageLog;
 import ghidra.program.model.data.ArrayDataType;
 import ghidra.program.model.data.CharDataType;
@@ -100,6 +99,7 @@ public class StdumpAST {
 		}
 		
 		public DataType createTypeImpl(ImporterState importer) {
+			importer.log.appendMsg("createTypeImpl() called on a node that isn't a type.");
 			return Undefined1DataType.dataType;
 		}
 		
@@ -206,7 +206,6 @@ public class StdumpAST {
 		int vtableIndex = -1;
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			importer.log.appendMsg("Bad function type created.");
 			return Undefined1DataType.dataType;
 		}
 	}
