@@ -82,7 +82,7 @@ public class StabsImporter extends FlatProgramAPI {
 					elfFile = File.createTempFile("stdump_input_", ".elf");
 				} catch (IOException e) {
 					log.appendException(e);
-					cleanup();
+					cleanupTemporaryFiles();
 					return false;
 				}
 				temporaryFiles.add(elfFile);
@@ -97,12 +97,12 @@ public class StabsImporter extends FlatProgramAPI {
 						exporter.export(elfFile, program, null, monitor);
 					} catch (ExporterException | IOException e) {
 						log.appendException(e);
-						cleanup();
+						cleanupTemporaryFiles();
 						return false;
 					}
 				} else {
 					log.appendMsg("ElfExporter.canExportDomainObject(program.getClass()) returned false.");
-					cleanup();
+					cleanupTemporaryFiles();
 					return false;
 				}
 			} else {
@@ -115,12 +115,12 @@ public class StabsImporter extends FlatProgramAPI {
 				monitor.setMessage("STABS - Running stdump...");
 				jsonOutput = runStdump(elfFile.getAbsolutePath(), monitor, log);
 				if(jsonOutput == null) {
-					cleanup();
+					cleanupTemporaryFiles();
 					return false;
 				}
 			} catch (IOException e) {
 				log.appendException(e);
-				cleanup();
+				cleanupTemporaryFiles();
 				return false;
 			}
 		} else {
@@ -132,10 +132,12 @@ public class StabsImporter extends FlatProgramAPI {
 				stream.close();
 			} catch (IOException e) {
 				log.appendException(e);
-				cleanup();
+				cleanupTemporaryFiles();
 				return false;
 			}
 		}
+
+		cleanupTemporaryFiles();
 		
 		// Parse the JSON file into an AST.
 		monitor.setMessage("STABS - Parsing AST...");
@@ -144,7 +146,6 @@ public class StabsImporter extends FlatProgramAPI {
 			ast = StdumpParser.readJson(jsonOutput);
 		} catch (FileNotFoundException e) {
 			log.appendException(e);
-			cleanup();
 			return false;
 		}
 		
@@ -166,11 +167,10 @@ public class StabsImporter extends FlatProgramAPI {
 			importGlobalVariables(importer);
 		}
 		
-		cleanup();
 		return true;
 	}
 	
-	public void cleanup() {
+	public void cleanupTemporaryFiles() {
 		for(File file : temporaryFiles) {
 			if(!file.delete()) {
 				log.appendMsg("Failed to delete temporary file: " + file.getAbsolutePath());
