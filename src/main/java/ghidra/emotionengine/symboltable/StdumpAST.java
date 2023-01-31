@@ -89,7 +89,7 @@ public class StdumpAST {
 		
 		public DataType createType(ImporterState importer) {
 			if(isInCreateTypeCall) {
-				importer.log.appendMsg("Bad circular type definition: " + name + "\n");
+				importer.log.appendMsg("Bad circular type definition: " + name);
 				return Undefined1DataType.dataType;
 			}
 			isInCreateTypeCall = true;
@@ -371,14 +371,14 @@ public class StdumpAST {
 				index = importer.typeNameToDeduplicatedTypeIndex.get(type_name);
 			}
 			if(index == null) {
-				importer.log.appendMsg("Type lookup failed: " + type_name + "\n");
+				importer.log.appendMsg("Type lookup failed: " + type_name);
 				return Undefined1DataType.dataType;
 			}
 			DataType type = importer.types.get(index);
 			if(type == null) {
 				Node node = importer.ast.deduplicatedTypes.get(index);
 				if(node instanceof InlineStructOrUnion) {
-					importer.log.appendMsg("Bad type name referencing struct or union: " + type_name + "\n");
+					importer.log.appendMsg("Bad type name referencing struct or union: " + type_name);
 					return Undefined1DataType.dataType;
 				}
 				type = node.createType(importer);
