@@ -138,6 +138,10 @@ public class StabsImporter extends FlatProgramAPI {
 
 		cleanupTemporaryFiles();
 		
+		if(monitor.isCancelled()) {
+			return false;
+		}
+		
 		// Parse the JSON file into an AST.
 		monitor.setMessage("STABS - Parsing AST...");
 		StdumpAST.ParsedJsonFile ast;
@@ -145,6 +149,10 @@ public class StabsImporter extends FlatProgramAPI {
 			ast = StdumpParser.readJson(jsonOutput);
 		} catch (FileNotFoundException e) {
 			log.appendException(e);
+			return false;
+		}
+		
+		if(monitor.isCancelled()) {
 			return false;
 		}
 		
