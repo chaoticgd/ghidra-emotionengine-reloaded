@@ -1,9 +1,9 @@
-name: Publish releases
+name: Publish unstable builds
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 jobs:
   build_and_publish:
@@ -33,6 +33,6 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: dist/*ghidra-emotionengine-reloaded.zip
-          tag: ${{ github.ref }}
+          tag: "unstable"
           overwrite: true
           file_glob: true
