@@ -42,3 +42,7 @@ hs_err_pid*
 # vscode generated files
 *.vscode
 
+/bin/
+/os/linux_x86_64/
+/os/mac_x86_64/
+/os/win_x86_64/
