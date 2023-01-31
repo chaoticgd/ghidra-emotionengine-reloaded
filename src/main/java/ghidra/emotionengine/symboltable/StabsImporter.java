@@ -422,12 +422,13 @@ public class StabsImporter extends FlatProgramAPI {
 		InputStream stdout = process.getInputStream();
 		InputStream stderr = process.getErrorStream();
 		BufferedReader errorReader = new BufferedReader(new InputStreamReader(stderr));
-		int returnCode = process.waitFor();
+		byte[] output = stdout.readAllBytes();
 		while(errorReader.ready()) {
 			log.appendMsg("STABS", stripColourCodes(errorReader.readLine()));
 		}
+		int returnCode = process.waitFor();
 		if(returnCode == 0) {
-			return stdout.readAllBytes();
+			return output;
 		} else {
 			return null;
 		}
