@@ -117,7 +117,7 @@ public class StabsImporter extends FlatProgramAPI {
 					cleanupTemporaryFiles();
 					return false;
 				}
-			} catch (IOException e) {
+			} catch (InterruptedException | IOException e) {
 				log.appendException(e);
 				cleanupTemporaryFiles();
 				return false;
@@ -410,7 +410,7 @@ public class StabsImporter extends FlatProgramAPI {
 		}
 	}
 	
-	public static byte[] runStdump(String elfPath, TaskMonitor monitor, MessageLog log) throws IOException {
+	public static byte[] runStdump(String elfPath, TaskMonitor monitor, MessageLog log) throws InterruptedException, IOException {
 		String executableName = "stdump" + Platform.CURRENT_PLATFORM.getExecutableExtension();
 		File executable = Application.getOSFile(executableName);
 		String[] command = {
@@ -422,17 +422,32 @@ public class StabsImporter extends FlatProgramAPI {
 		InputStream stdout = process.getInputStream();
 		InputStream stderr = process.getErrorStream();
 		BufferedReader errorReader = new BufferedReader(new InputStreamReader(stderr));
-		boolean isBad = false;
+		int returnCode = process.waitFor();
 		while(errorReader.ready()) {
-			log.appendMsg("stdump", errorReader.readLine());
-			isBad = true;
+			log.appendMsg("STABS", stripColourCodes(errorReader.readLine()));
 		}
-		if(!isBad) {
+		if(returnCode == 0) {
 			return stdout.readAllBytes();
 		} else {
 			return null;
 		}
 		
+	}
+	
+	public static String stripColourCodes(String input) {
+		StringBuilder output = new StringBuilder();
+		for(int i = 0; i < input.length(); i++) {
+			if(i + 1 < input.length() && input.charAt(i) == '\033' && input.charAt(i + 1) == '[') {
+				if(i + 3 < input.length() && input.charAt(i + 3) == 'm') {
+					i += 3;
+				} else {
+					i += 4;
+				}
+			} else {
+				output.append(input.charAt(i));
+			}
+		}
+		return output.toString();
 	}
 
 }

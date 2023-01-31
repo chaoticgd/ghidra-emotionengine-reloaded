@@ -89,7 +89,7 @@ public class StdumpAST {
 		
 		public DataType createType(ImporterState importer) {
 			if(isInCreateTypeCall) {
-				importer.log.appendMsg("Bad circular type definition: " + name);
+				importer.log.appendMsg("STABS", "Bad circular type definition: " + name);
 				return Undefined1DataType.dataType;
 			}
 			isInCreateTypeCall = true;
@@ -99,7 +99,7 @@ public class StdumpAST {
 		}
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			importer.log.appendMsg("createTypeImpl() called on a node that isn't a type.");
+			importer.log.appendMsg("STABS", "createTypeImpl() called on a node that isn't a type.");
 			return Undefined1DataType.dataType;
 		}
 		
@@ -176,7 +176,7 @@ public class StdumpAST {
 				return UnsignedInteger16DataType.dataType;
 			case UNKNOWN_PROBABLY_ARRAY:
 			}
-			importer.log.appendMsg("Bad builtin type created.");
+			importer.log.appendMsg("STABS", "Bad builtin type created.");
 			return Undefined1DataType.dataType;
 		}
 	}
@@ -371,14 +371,14 @@ public class StdumpAST {
 				index = importer.typeNameToDeduplicatedTypeIndex.get(type_name);
 			}
 			if(index == null) {
-				importer.log.appendMsg("Type lookup failed: " + type_name);
+				importer.log.appendMsg("STABS", "Type lookup failed: " + type_name);
 				return Undefined1DataType.dataType;
 			}
 			DataType type = importer.types.get(index);
 			if(type == null) {
 				Node node = importer.ast.deduplicatedTypes.get(index);
 				if(node instanceof InlineStructOrUnion) {
-					importer.log.appendMsg("Bad type name referencing struct or union: " + type_name);
+					importer.log.appendMsg("STABS", "Bad type name referencing struct or union: " + type_name);
 					return Undefined1DataType.dataType;
 				}
 				type = node.createType(importer);
