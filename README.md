@@ -18,7 +18,7 @@ This extension is based on the original [ghidra-emotionengine](https://github.co
 
 ## Installation
 
-Precompiled packages are available on the [releases](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/releases) page. To install the package, follow the instructions in the [Ghidra documentation](https://ghidra-sre.org/InstallationGuide.html#Extensions).
+Release builds are available on the [releases](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/releases) page. Unstable builds, generated whenever there is a push to the main branch, are available [here](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/releases/tag/unstable). To install the package, follow the instructions in the [Ghidra documentation](https://ghidra-sre.org/InstallationGuide.html#Extensions).
 
 
 ## Building
