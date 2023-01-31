@@ -227,14 +227,9 @@ public class StdumpAST {
 		}
 	}
 	
-	public static class BaseClass {
-		int offset;
-		Node type;
-	}
-	
 	public static class InlineStructOrUnion extends Node {
 		boolean isStruct;
-		ArrayList<BaseClass> baseClasses = new ArrayList<BaseClass>();
+		ArrayList<Node> baseClasses = new ArrayList<Node>();
 		ArrayList<Node> fields = new ArrayList<Node>();
 		ArrayList<Node> memberFunctions = new ArrayList<Node>();
 		
@@ -260,11 +255,11 @@ public class StdumpAST {
 			if(isStruct) {
 				Structure type = (Structure) dest;
 				for(int i = 0; i < baseClasses.size(); i++) {
-					BaseClass baseClass = baseClasses.get(i);
-					DataType baseType = replaceVoidWithUndefined1(baseClass.type.createType(importer));
-					boolean isBeyondEnd = baseClass.offset + baseType.getLength() > sizeBits / 8;
-					if(!isBeyondEnd && baseClass.offset > -1) {
-						type.replaceAtOffset(baseClass.offset, baseType, baseType.getLength(), "base_class_" + Integer.toString(i), "");
+					Node baseClass = baseClasses.get(i);
+					DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
+					boolean isBeyondEnd = baseClass.absoluteOffsetBytes + baseType.getLength() > sizeBits / 8;
+					if(!isBeyondEnd && baseClass.absoluteOffsetBytes > -1) {
+						type.replaceAtOffset(baseClass.absoluteOffsetBytes, baseType, baseType.getLength(), "base_class_" + Integer.toString(i), "");
 					}
 				}
 				for(Node node : fields) {

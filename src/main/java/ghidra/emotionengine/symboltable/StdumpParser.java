@@ -18,7 +18,7 @@ import com.google.gson.stream.JsonReader;
 
 public class StdumpParser {
 	public static final String SUPPORTED_STDUMP_VERSION = "v1.0";
-	public static final int SUPPORTED_FORMAT_VERSION = 6;
+	public static final int SUPPORTED_FORMAT_VERSION = 7;
 	
 	public static StdumpAST.ParsedJsonFile readJson(byte[] json) throws FileNotFoundException {
 		JsonReader reader = new JsonReader(new InputStreamReader(new ByteArrayInputStream(json)));
@@ -130,11 +130,7 @@ public class StdumpParser {
 				struct_or_union.isStruct = descriptor.equals("struct");
 				if(struct_or_union.isStruct) {
 					for(JsonElement base_class : object.get("base_classes").getAsJsonArray()) {
-						StdumpAST.BaseClass dest = new StdumpAST.BaseClass();
-						JsonObject src = base_class.getAsJsonObject();
-						dest.offset = src.get("offset").getAsInt();
-						dest.type = context.deserialize(src.get("type"), StdumpAST.Node.class);
-						struct_or_union.baseClasses.add(dest);
+						struct_or_union.baseClasses.add(context.deserialize(base_class, StdumpAST.Node.class));
 					}
 				}
 				for(JsonElement field : object.get("fields").getAsJsonArray()) {
