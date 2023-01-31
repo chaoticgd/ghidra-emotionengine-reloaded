@@ -57,6 +57,8 @@ public class StabsImporter extends FlatProgramAPI {
 	TaskMonitor monitor;
 	MessageLog log;
 	
+	ArrayList<File> temporaryFiles = new ArrayList<>();
+	
 	public StabsImporter(Program p, ImportOptions o, TaskMonitor m, MessageLog l) {
 		super(p, m);
 		program = p;
@@ -69,36 +71,25 @@ public class StabsImporter extends FlatProgramAPI {
 		monitor.setMessage("STABS - Starting...");
 		
 		File elfFile = null;
-		boolean deleteElfAfterwards = false;
-		File jsonFile = null;
-		boolean deleteJsonAfterwards = false;
 		byte[] jsonOutput = null;
 		if(options.overrideJsonPath.isBlank()) {
-			// The JSON file doesn't already exist, so create it as a temporary
-			// file so we can have stdump write its output to it.
-			try {
-				jsonFile = File.createTempFile("stdump_output", ".json");
-			} catch (IOException e) {
-				log.appendException(e);
-				return false;
-			}
-			deleteJsonAfterwards = true;
-			
 			// Determine where to load the ELF file from, or create it from the
 			// current program if a path wasn't manually specified.
 			if(options.overrideElfPath.isBlank()) {
 				// The ELF file doesn't already exist, so here we create a
 				// new temporary file.
 				try {
-					elfFile = File.createTempFile("stdump_input", ".elf");
+					elfFile = File.createTempFile("stdump_input_", ".elf");
 				} catch (IOException e) {
 					log.appendException(e);
-					jsonFile.delete();
+					cleanup();
 					return false;
 				}
-				deleteElfAfterwards = true;
+				temporaryFiles.add(elfFile);
 				
 				// Write the contents of the current program to the ELF file.
+				// TODO: Switch to using OriginalFileExporter instead of
+				// ElfExporter when the next Ghidra update comes out.
 				ElfExporter exporter = new ElfExporter();
 				if(exporter.canExportDomainObject(program.getClass())) {
 					try {
@@ -106,18 +97,17 @@ public class StabsImporter extends FlatProgramAPI {
 						exporter.export(elfFile, program, null, monitor);
 					} catch (ExporterException | IOException e) {
 						log.appendException(e);
-						elfFile.delete();
-						jsonFile.delete();
+						cleanup();
 						return false;
 					}
 				} else {
 					log.appendMsg("ElfExporter.canExportDomainObject(program.getClass()) returned false.");
+					cleanup();
 					return false;
 				}
 			} else {
 				// A custom ELF file was specified, so we don't create one.
 				elfFile = new File(options.overrideElfPath);
-				deleteElfAfterwards = false;
 			}
 			
 			// Run stdump.
@@ -125,33 +115,26 @@ public class StabsImporter extends FlatProgramAPI {
 				monitor.setMessage("STABS - Running stdump...");
 				jsonOutput = runStdump(elfFile.getAbsolutePath(), monitor, log);
 				if(jsonOutput == null) {
-					if(deleteElfAfterwards) {
-						elfFile.delete();
-					}
-					jsonFile.delete();
+					cleanup();
 					return false;
 				}
 			} catch (IOException e) {
 				log.appendException(e);
-				if(deleteElfAfterwards) {
-					elfFile.delete();
-				}
-				jsonFile.delete();
+				cleanup();
 				return false;
 			}
 		} else {
 			// A custom JSON file was specified, so we don't need to run stdump.
-			jsonFile = new File(options.overrideJsonPath);
+			File jsonFile = new File(options.overrideJsonPath);
 			try {
 				FileInputStream stream = new FileInputStream(jsonFile);
 				jsonOutput = stream.readAllBytes();
 				stream.close();
 			} catch (IOException e) {
 				log.appendException(e);
+				cleanup();
 				return false;
 			}
-			deleteJsonAfterwards = false;
-			deleteElfAfterwards = false;
 		}
 		
 		// Parse the JSON file into an AST.
@@ -161,9 +144,7 @@ public class StabsImporter extends FlatProgramAPI {
 			ast = StdumpParser.readJson(jsonOutput);
 		} catch (FileNotFoundException e) {
 			log.appendException(e);
-			if(deleteElfAfterwards && elfFile != null) {
-				elfFile.delete();
-			}
+			cleanup();
 			return false;
 		}
 		
@@ -185,15 +166,17 @@ public class StabsImporter extends FlatProgramAPI {
 			importGlobalVariables(importer);
 		}
 		
-		// Cleanup.
-		if(deleteElfAfterwards && elfFile != null) {
-			elfFile.delete();
-		}
-		if(deleteJsonAfterwards) {
-			jsonFile.delete();
-		}
-		
+		cleanup();
 		return true;
+	}
+	
+	public void cleanup() {
+		for(File file : temporaryFiles) {
+			if(!file.delete()) {
+				log.appendMsg("Failed to delete temporary file: " + file.getAbsolutePath());
+			}
+		}
+		temporaryFiles.clear();
 	}
 	
 	public void importDataTypes(StdumpAST.ImporterState importer) {

@@ -55,6 +55,7 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	
 	private StabsImporter.ImportOptions importOptions = new StabsImporter.ImportOptions();
 	private StabsImporter.ImportOptions DEFAULT_OPTIONS = new StabsImporter.ImportOptions();
+	StabsImporter importer = null;
 	
 	public StabsAnalyzer() {
 		super(STABS_ANALYZER_NAME, STABS_ANALYZER_DESCRIPTION, AnalyzerType.BYTE_ANALYZER);
@@ -77,7 +78,7 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	@Override
 	public boolean added(Program program, AddressSetView set, TaskMonitor monitor, MessageLog log)
 			throws CancelledException {
-		StabsImporter importer = new StabsImporter(program, importOptions, monitor, log);
+		importer = new StabsImporter(program, importOptions, monitor, log);
 		return importer.doImport();
 	}
 	
