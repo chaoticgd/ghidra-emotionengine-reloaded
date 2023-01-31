@@ -24,10 +24,6 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 			" from the link below, and put it in the os/ directory.\n\n" +
 			"For more information see:\n" +
 			"https://github.com/chaoticgd/ccc";
-	
-	public static final String OPTION_IMPORT_DATA_TYPES = "Import Data Types";
-	public static final String OPTION_IMPORT_DATA_TYPES_DESC =
-			"Import deduplicated data types from the symbol table into Ghidra.";
 
 	public static final String OPTION_IMPORT_FUNCTIONS = "Import Function";
 	public static final String OPTION_IMPORT_FUNCTIONS_DESC =
@@ -84,7 +80,6 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	
 	@Override
 	public void registerOptions(Options options, Program program) {
-		options.registerOption(OPTION_IMPORT_DATA_TYPES, DEFAULT_OPTIONS.importDataTypes, null, OPTION_IMPORT_DATA_TYPES);
 		options.registerOption(OPTION_IMPORT_FUNCTIONS, DEFAULT_OPTIONS.importFunctions, null, OPTION_IMPORT_FUNCTIONS);
 		options.registerOption(OPTION_IMPORT_GLOBALS, DEFAULT_OPTIONS.importGlobals, null, OPTION_IMPORT_GLOBALS);
 		options.registerOption(OPTION_INLINED_CODE, DEFAULT_OPTIONS.markInlinedCode, null, OPTION_INLINED_CODE);
@@ -95,7 +90,6 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	
 	@Override
 	public void optionsChanged(Options options, Program program) {
-		importOptions.importDataTypes = options.getBoolean(OPTION_IMPORT_DATA_TYPES, DEFAULT_OPTIONS.importDataTypes);
 		importOptions.importFunctions = options.getBoolean(OPTION_IMPORT_FUNCTIONS, DEFAULT_OPTIONS.importFunctions);
 		importOptions.importGlobals = options.getBoolean(OPTION_IMPORT_GLOBALS, DEFAULT_OPTIONS.importGlobals);
 		importOptions.markInlinedCode = options.getBoolean(OPTION_INLINED_CODE, DEFAULT_OPTIONS.markInlinedCode);

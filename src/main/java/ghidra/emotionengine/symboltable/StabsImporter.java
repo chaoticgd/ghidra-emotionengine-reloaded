@@ -43,7 +43,6 @@ import ghidra.util.task.TaskMonitor;
 public class StabsImporter extends FlatProgramAPI {
 
 	public static class ImportOptions {
-		boolean importDataTypes = true;
 		boolean importFunctions = true;
 		boolean importGlobals = true;
 		boolean markInlinedCode = true;
@@ -157,9 +156,7 @@ public class StabsImporter extends FlatProgramAPI {
 		importer.monitor = monitor;
 		importer.log = log;
 		importer.programTypeManager = program.getDataTypeManager();
-		if(options.importDataTypes) {
-			importDataTypes(importer);
-		}
+		importDataTypes(importer);
 		if(options.importFunctions) {
 			importFunctions(importer, program);
 		}
