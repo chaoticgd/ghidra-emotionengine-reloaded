@@ -208,12 +208,12 @@ public class StabsImporter extends FlatProgramAPI {
 		for(int i = 0; i < type_count; i++) {
 			StdumpAST.Node node = importer.ast.deduplicatedTypes.get(i);
 			if(node instanceof StdumpAST.InlineEnum) {
-				StdumpAST.InlineEnum inline_enum = (StdumpAST.InlineEnum) node;
-				DataType type = inline_enum.createType(importer);
+				StdumpAST.InlineEnum inlineEnum = (StdumpAST.InlineEnum) node;
+				DataType type = inlineEnum.createType(importer);
 				importer.types.add(importer.programTypeManager.addDataType(type, null));
 			} else if(node instanceof StdumpAST.InlineStructOrUnion) {
-				StdumpAST.InlineStructOrUnion struct_or_union = (StdumpAST.InlineStructOrUnion) node;
-				DataType type = struct_or_union.create_empty(importer);
+				StdumpAST.InlineStructOrUnion structOrUnion = (StdumpAST.InlineStructOrUnion) node;
+				DataType type = structOrUnion.create_empty(importer);
 				importer.types.add(importer.programTypeManager.addDataType(type, null));
 			} else {
 				importer.types.add(null);
@@ -241,8 +241,8 @@ public class StabsImporter extends FlatProgramAPI {
 		
 		for(int i = 0; i < importer.ast.files.size(); i++) {
 			StdumpAST.SourceFile sourceFile = (StdumpAST.SourceFile) importer.ast.files.get(i);
-			for(StdumpAST.Node function_node : sourceFile.functions) {
-				StdumpAST.FunctionDefinition def = (StdumpAST.FunctionDefinition) function_node;
+			for(StdumpAST.Node functionNode : sourceFile.functions) {
+				StdumpAST.FunctionDefinition def = (StdumpAST.FunctionDefinition) functionNode;
 				StdumpAST.FunctionType type = (StdumpAST.FunctionType) def.type;
 				if(def.addressRange.valid()) {
 					// Find or create the function.
@@ -298,11 +298,11 @@ public class StabsImporter extends FlatProgramAPI {
 		// Remove spam like "gcc2_compiled." and remove the existing label for
 		// the function name so it can be reapplied below.
 		SymbolTable symbolTable = program.getSymbolTable();
-		Symbol[] existing_symbols = symbolTable.getSymbols(low);
-		for(Symbol existing_symbol : existing_symbols) {
-			String name = existing_symbol.getName();
+		Symbol[] existingSymbols = symbolTable.getSymbols(low);
+		for(Symbol existingSymbol : existingSymbols) {
+			String name = existingSymbol.getName();
 			if(name.equals("__gnu_compiled_cplusplus") || name.equals("gcc2_compiled.") || name.equals(def.name)) {
-				symbolTable.removeSymbolSpecial(existing_symbol);
+				symbolTable.removeSymbolSpecial(existingSymbol);
 			}
 		}
 		
@@ -319,21 +319,21 @@ public class StabsImporter extends FlatProgramAPI {
 	
 	private HashSet<String> fillInParameters(Function function, StdumpAST.ImporterState importer,
 			StdumpAST.FunctionDefinition def, StdumpAST.FunctionType type) {
-		HashSet<String> parameter_names = new HashSet<>();
+		HashSet<String> parameterNames = new HashSet<>();
 		if(type.parameters.size() > 0) {
 			ArrayList<Variable> parameters = new ArrayList<>();
 			for(int i = 0; i < type.parameters.size(); i++) {
 				StdumpAST.Variable variable = (StdumpAST.Variable) type.parameters.get(i);
-				DataType parameter_type = StdumpAST.replaceVoidWithUndefined1(variable.type.createType(importer));
+				DataType parameterType = StdumpAST.replaceVoidWithUndefined1(variable.type.createType(importer));
 				if(variable.storage.isByReference) {
-					parameter_type = new PointerDataType(parameter_type);
+					parameterType = new PointerDataType(parameterType);
 				}
 				try {
-					parameters.add(new ParameterImpl(variable.name, parameter_type, program));
+					parameters.add(new ParameterImpl(variable.name, parameterType, program));
 				} catch (InvalidInputException e) {
 					log.appendException(e);
 				}
-				parameter_names.add(variable.name);
+				parameterNames.add(variable.name);
 			}
 			try {
 				function.replaceParameters(parameters, Function.FunctionUpdateType.DYNAMIC_STORAGE_ALL_PARAMS, true, SourceType.ANALYSIS);
@@ -341,7 +341,7 @@ public class StabsImporter extends FlatProgramAPI {
 				log.appendMsg("Failed to setup parameters for " + def.name + ": " + exception.getMessage());
 			}
 		}
-		return parameter_names;
+		return parameterNames;
 	}
 	
 	private void markInlinedCode(StdumpAST.FunctionDefinition def, StdumpAST.SourceFile sourceFile) {
@@ -364,18 +364,18 @@ public class StabsImporter extends FlatProgramAPI {
 	}
 	
 	private void fillInLocalVariables(Function function, StdumpAST.ImporterState importer,
-			StdumpAST.FunctionDefinition def, HashSet<String> parameter_names) {
+			StdumpAST.FunctionDefinition def, HashSet<String> parameterNames) {
 		// Add local variables.
-		HashMap<String, StdumpAST.Variable> stack_locals = new HashMap<>();
+		HashMap<String, StdumpAST.Variable> stackLocals = new HashMap<>();
 		for(StdumpAST.Node child : def.locals) {
-			if(child instanceof StdumpAST.Variable && !parameter_names.contains(child.name)) {
+			if(child instanceof StdumpAST.Variable && !parameterNames.contains(child.name)) {
 				StdumpAST.Variable src = (StdumpAST.Variable) child;
 				if(src.storageClass != StdumpAST.StorageClass.STATIC && src.storage.type == StdumpAST.VariableStorageType.STACK) {
-					stack_locals.put(src.name, src);
+					stackLocals.put(src.name, src);
 				}
 			}
 		}
-		for(Map.Entry<String, StdumpAST.Variable> local : stack_locals.entrySet()) {
+		for(Map.Entry<String, StdumpAST.Variable> local : stackLocals.entrySet()) {
 			StdumpAST.Variable var = local.getValue();
 			DataType localType = StdumpAST.replaceVoidWithUndefined1(var.type.createType(importer));
 			LocalVariable dest;

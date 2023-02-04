@@ -335,7 +335,7 @@ public class StdumpAST {
 	public static class SourceFile extends Node {
 		String path;
 		String relativePath;
-		int text_address;
+		int textAddress;
 		ArrayList<Node> types = new ArrayList<Node>();
 		ArrayList<Node> functions = new ArrayList<Node>();
 		ArrayList<Node> globals = new ArrayList<Node>();
@@ -343,12 +343,12 @@ public class StdumpAST {
 	}
 	
 	public static class TypeName extends Node {
-		String type_name;
+		String typeName;
 		int referencedFileIndex = -1;
 		int referencedStabsTypeNumber = -1;
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			if(type_name.equals("void")) {
+			if(typeName.equals("void")) {
 				return VoidDataType.dataType;
 			}
 			Integer index = null;
@@ -363,17 +363,17 @@ public class StdumpAST {
 				// For STABS cross references, no type number is provided,
 				// so we must lookup the type by name instead. This is
 				// riskier but I think it's the best we can really do.
-				index = importer.typeNameToDeduplicatedTypeIndex.get(type_name);
+				index = importer.typeNameToDeduplicatedTypeIndex.get(typeName);
 			}
 			if(index == null) {
-				importer.log.appendMsg("STABS", "Type lookup failed: " + type_name);
+				importer.log.appendMsg("STABS", "Type lookup failed: " + typeName);
 				return Undefined1DataType.dataType;
 			}
 			DataType type = importer.types.get(index);
 			if(type == null) {
 				Node node = importer.ast.deduplicatedTypes.get(index);
 				if(node instanceof InlineStructOrUnion) {
-					importer.log.appendMsg("STABS", "Bad type name referencing struct or union: " + type_name);
+					importer.log.appendMsg("STABS", "Bad type name referencing struct or union: " + typeName);
 					return Undefined1DataType.dataType;
 				}
 				type = node.createType(importer);
