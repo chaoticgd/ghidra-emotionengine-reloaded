@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import ghidra.app.util.importer.MessageLog;
 import ghidra.program.model.data.ArrayDataType;
+import ghidra.program.model.data.BooleanDataType;
 import ghidra.program.model.data.CharDataType;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeManager;
@@ -150,8 +151,9 @@ public class StdumpAST {
 				return UnsignedCharDataType.dataType;
 			case SIGNED_8:
 			case UNQUALIFIED_8:
-			case BOOL_8:
 				return CharDataType.dataType;
+			case BOOL_8:
+				return BooleanDataType.dataType;
 			case UNSIGNED_16:
 				return ShortDataType.dataType;
 			case SIGNED_16:
