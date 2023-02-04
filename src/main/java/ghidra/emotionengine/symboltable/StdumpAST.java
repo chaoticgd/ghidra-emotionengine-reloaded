@@ -257,26 +257,19 @@ public class StdumpAST {
 				for(int i = 0; i < baseClasses.size(); i++) {
 					Node baseClass = baseClasses.get(i);
 					DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
-					boolean isBeyondEnd = baseClass.absoluteOffsetBytes + baseType.getLength() > sizeBits / 8;
-					if(!isBeyondEnd && baseClass.absoluteOffsetBytes > -1) {
-						type.replaceAtOffset(baseClass.absoluteOffsetBytes, baseType, baseType.getLength(), "base_class_" + Integer.toString(i), "");
-					}
+					addField(type, baseType, baseClass, baseClass.absoluteOffsetBytes, importer);
 				}
 				for(Node node : fields) {
 					if(node.storageClass != StorageClass.STATIC) {
 						// Currently we don't try to import bit fields.
-						boolean isBitfield = node instanceof BitField;
 						DataType field = null;
 						if(node.name != null && node.name.equals("__vtable")) {
-							field = new PointerDataType(create_vtable(importer));
+							field = new PointerDataType(createVtable(importer));
 						} else {
 							node.prefix += name + "__";
 							field = replaceVoidWithUndefined1(node.createType(importer));
 						}
-						boolean isBeyondEnd = node.relativeOffsetBytes + field.getLength() > sizeBits / 8;
-						if(!isBitfield && !isBeyondEnd) {
-							type.replaceAtOffset(node.relativeOffsetBytes, field, field.getLength(), node.name, "");
-						}
+						addField(type, field, node, node.relativeOffsetBytes, importer);
 					}
 				}
 			} else {
@@ -290,7 +283,7 @@ public class StdumpAST {
 			}
 		}
 		
-		public DataType create_vtable(ImporterState importer) {
+		public DataType createVtable(ImporterState importer) {
 			StructureDataType vtable = new StructureDataType(generateName() + "__vtable", 0, importer.programTypeManager);
 			for(Node node : memberFunctions) {
 				if(node instanceof FunctionType) {
@@ -302,11 +295,32 @@ public class StdumpAST {
 						}
 						try {
 							vtable.replaceAtOffset(function.vtableIndex * 4, PointerDataType.dataType, 4, function.name, "");
-						} catch(IllegalArgumentException e) {}
+						} catch(IllegalArgumentException e) {
+							importer.log.appendException(e);
+						}
 					}
 				}
 			}
 			return vtable;
+		}
+		
+		public void addField(Structure structure, DataType field, Node node, int offset, ImporterState importer) {
+			boolean isBitfield = node instanceof BitField;
+			boolean isBeyondEnd = offset + field.getLength() > sizeBits / 8;
+			boolean isZeroLengthStruct = false;
+			if(field instanceof Structure) {
+				Structure structField = (Structure) field;
+				if(structField.getLength() == 1 && structField.getNumDefinedComponents() == 0) {
+					isZeroLengthStruct = true;
+				}
+			}
+			if(!isBitfield && !isBeyondEnd && !isZeroLengthStruct) {
+				try {
+					structure.replaceAtOffset(offset, field, field.getLength(), node.name, "");
+				} catch(IllegalArgumentException e) {
+					importer.log.appendException(e);
+				}
+			}
 		}
 	}
 	
