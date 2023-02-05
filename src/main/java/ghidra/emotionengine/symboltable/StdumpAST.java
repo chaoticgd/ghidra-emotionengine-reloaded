@@ -286,15 +286,21 @@ public class StdumpAST {
 		}
 		
 		public DataType createVtable(ImporterState importer) {
-			StructureDataType vtable = new StructureDataType(generateName() + "__vtable", 0, importer.programTypeManager);
+			int maxVtableIndex = -1;
+			for(Node node : memberFunctions) {
+				if(node instanceof FunctionType) {
+					FunctionType function = (FunctionType) node;
+					if(function.vtableIndex > maxVtableIndex) {
+						maxVtableIndex = function.vtableIndex;
+					}
+				}
+			}
+			int vtableSize = (maxVtableIndex + 1) * 4;
+			StructureDataType vtable = new StructureDataType(generateName() + "__vtable", vtableSize, importer.programTypeManager);
 			for(Node node : memberFunctions) {
 				if(node instanceof FunctionType) {
 					FunctionType function = (FunctionType) node;
 					if(function.vtableIndex > -1) {
-						int end = (function.vtableIndex + 1) * 4;
-						if(end > vtable.getLength()) {
-							vtable.growStructure(end - vtable.getLength());
-						}
 						try {
 							vtable.replaceAtOffset(function.vtableIndex * 4, PointerDataType.dataType, 4, function.name, "");
 						} catch(IllegalArgumentException e) {
