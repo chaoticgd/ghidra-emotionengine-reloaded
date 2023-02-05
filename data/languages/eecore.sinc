@@ -393,21 +393,7 @@ $(row) _psubuw;   :psubuw RD128, RS128src, RT128src  is RD128 & RT128src & RS128
 $(row) _psubsw;   :psubsw RD128, RS128src, RT128src  is RD128 & RT128src & RS128src & mmiop=0x11 & fct=0x8  { RD128 = _psubsw(RS128src, RT128src); }
 $(row) _pxor;     :pxor RD128, RS128src, RT128src    is RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x9  { RD128 = _pxor(RS128src, RT128src); }
 $(row) _qfsrv;    :qfsrv RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x1B & fct=0x28 { RD128 = _qfsrv(RS128src, RT128src); }
+$(row) _plzcw;    :plzcw RD, RSsrc                   is RD & RSsrc & rt=0 & mmiop=0 & fct=0x4 { RD = _plzcw(RSsrc); }
 @undef row
-
-:plzcw RD, RSsrc    is RD & RSsrc & rt=0 & mmiop=0 & fct=0x4 {
-    if (RSsrc[0,32] s< 0) goto <lower_ones>;
-    RD[0,32] = countLeadingZeros(RSsrc[0,32]) - 1;
-    goto <upper>;
-    <lower_ones>
-    RD[0,32] = countLeadingOnes(RSsrc[0,32]) - 1;
-    <upper>
-    if (RSsrc[32,32] s< 0) goto <upper_ones>;
-    RD[32,32] = countLeadingZeros(RSsrc[32,32]) - 1;
-    goto <end>;
-    <upper_ones>
-    RD[32,32] = countLeadingOnes(RSsrc[32,32]) - 1;
-    <end>
-}
 
 }
