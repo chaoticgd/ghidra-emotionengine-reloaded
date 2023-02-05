@@ -108,7 +108,7 @@ public class StdumpAST {
 			if(conflict || name == null || name.isEmpty()) {
 				return prefix + name + "__" + Integer.toString(firstFile) + "_" + Integer.toString(stabsTypeNumber);
 			}
-			return name;
+			return prefix + name;
 		}
 	}
 	
