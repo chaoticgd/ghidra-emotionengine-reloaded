@@ -37,10 +37,10 @@ jobs:
           gradle-version: 7.6
           arguments: buildExtension -PGHIDRA_INSTALL_DIR=${{ env.GHIDRA_INSTALL_DIR }}
       - name: Release
-        uses: ncipollo/release-action@a2e71bdd4e7dab70ca26a852f29600c98b33153e
+        uses: svenstaro/upload-release-action@v1-release
         with:
-          name: "Unstable Builds"
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: dist/*ghidra-emotionengine-reloaded.zip
           tag: "unstable"
-          artifacts: dist/*ghidra-emotionengine-reloaded.zip
-          allowUpdates: true
-          replacesArtifacts: false
+          overwrite: true
+          file_glob: true
