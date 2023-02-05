@@ -21,7 +21,9 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 			" Most of this process is handled by stdump, a C++ program which is" +
 			" bundled with releases of Ghidra Emotion Engine: Reloaded. If this" +
 			" file is missing, download stdump " + StdumpParser.SUPPORTED_STDUMP_VERSION +
-			" from the link below, and put it in the os directory.\n\n" +
+			" from the link below, and put it in the" +
+			" ghidra-emotionengine-reloaded/os directory (see further" +
+			" instructions there).\n\n" +
 			"For more information see:\n" +
 			"https://github.com/chaoticgd/ccc";
 
