@@ -5,6 +5,7 @@ import java.util.HashMap;
 
 import ghidra.app.util.importer.MessageLog;
 import ghidra.program.model.data.ArrayDataType;
+import ghidra.program.model.data.BooleanDataType;
 import ghidra.program.model.data.CharDataType;
 import ghidra.program.model.data.DataType;
 import ghidra.program.model.data.DataTypeManager;
@@ -150,8 +151,9 @@ public class StdumpAST {
 				return UnsignedCharDataType.dataType;
 			case SIGNED_8:
 			case UNQUALIFIED_8:
-			case BOOL_8:
 				return CharDataType.dataType;
+			case BOOL_8:
+				return BooleanDataType.dataType;
 			case UNSIGNED_16:
 				return ShortDataType.dataType;
 			case SIGNED_16:
@@ -257,26 +259,19 @@ public class StdumpAST {
 				for(int i = 0; i < baseClasses.size(); i++) {
 					Node baseClass = baseClasses.get(i);
 					DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
-					boolean isBeyondEnd = baseClass.absoluteOffsetBytes + baseType.getLength() > sizeBits / 8;
-					if(!isBeyondEnd && baseClass.absoluteOffsetBytes > -1) {
-						type.replaceAtOffset(baseClass.absoluteOffsetBytes, baseType, baseType.getLength(), "base_class_" + Integer.toString(i), "");
-					}
+					addField(type, baseType, baseClass, baseClass.absoluteOffsetBytes, importer);
 				}
 				for(Node node : fields) {
 					if(node.storageClass != StorageClass.STATIC) {
 						// Currently we don't try to import bit fields.
-						boolean isBitfield = node instanceof BitField;
 						DataType field = null;
 						if(node.name != null && node.name.equals("__vtable")) {
-							field = new PointerDataType(create_vtable(importer));
+							field = new PointerDataType(createVtable(importer));
 						} else {
 							node.prefix += name + "__";
 							field = replaceVoidWithUndefined1(node.createType(importer));
 						}
-						boolean isBeyondEnd = node.relativeOffsetBytes + field.getLength() > sizeBits / 8;
-						if(!isBitfield && !isBeyondEnd) {
-							type.replaceAtOffset(node.relativeOffsetBytes, field, field.getLength(), node.name, "");
-						}
+						addField(type, field, node, node.relativeOffsetBytes, importer);
 					}
 				}
 			} else {
@@ -290,23 +285,50 @@ public class StdumpAST {
 			}
 		}
 		
-		public DataType create_vtable(ImporterState importer) {
-			StructureDataType vtable = new StructureDataType(generateName() + "__vtable", 0, importer.programTypeManager);
+		public DataType createVtable(ImporterState importer) {
+			int maxVtableIndex = -1;
+			for(Node node : memberFunctions) {
+				if(node instanceof FunctionType) {
+					FunctionType function = (FunctionType) node;
+					if(function.vtableIndex > maxVtableIndex) {
+						maxVtableIndex = function.vtableIndex;
+					}
+				}
+			}
+			int vtableSize = (maxVtableIndex + 1) * 4;
+			StructureDataType vtable = new StructureDataType(generateName() + "__vtable", vtableSize, importer.programTypeManager);
 			for(Node node : memberFunctions) {
 				if(node instanceof FunctionType) {
 					FunctionType function = (FunctionType) node;
 					if(function.vtableIndex > -1) {
-						int end = (function.vtableIndex + 1) * 4;
-						if(end > vtable.getLength()) {
-							vtable.growStructure(end - vtable.getLength());
-						}
 						try {
 							vtable.replaceAtOffset(function.vtableIndex * 4, PointerDataType.dataType, 4, function.name, "");
-						} catch(IllegalArgumentException e) {}
+						} catch(IllegalArgumentException e) {
+							importer.log.appendException(e);
+						}
 					}
 				}
 			}
 			return vtable;
+		}
+		
+		public void addField(Structure structure, DataType field, Node node, int offset, ImporterState importer) {
+			boolean isBitfield = node instanceof BitField;
+			boolean isBeyondEnd = offset + field.getLength() > sizeBits / 8;
+			boolean isZeroLengthStruct = false;
+			if(field instanceof Structure) {
+				Structure structField = (Structure) field;
+				if(structField.getLength() == 1 && structField.getNumDefinedComponents() == 0) {
+					isZeroLengthStruct = true;
+				}
+			}
+			if(!isBitfield && !isBeyondEnd && !isZeroLengthStruct) {
+				try {
+					structure.replaceAtOffset(offset, field, field.getLength(), node.name, "");
+				} catch(IllegalArgumentException e) {
+					importer.log.appendException(e);
+				}
+			}
 		}
 	}
 	
@@ -335,7 +357,7 @@ public class StdumpAST {
 	public static class SourceFile extends Node {
 		String path;
 		String relativePath;
-		int text_address;
+		int textAddress;
 		ArrayList<Node> types = new ArrayList<Node>();
 		ArrayList<Node> functions = new ArrayList<Node>();
 		ArrayList<Node> globals = new ArrayList<Node>();
@@ -343,12 +365,12 @@ public class StdumpAST {
 	}
 	
 	public static class TypeName extends Node {
-		String type_name;
+		String typeName;
 		int referencedFileIndex = -1;
 		int referencedStabsTypeNumber = -1;
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			if(type_name.equals("void")) {
+			if(typeName.equals("void")) {
 				return VoidDataType.dataType;
 			}
 			Integer index = null;
@@ -363,17 +385,17 @@ public class StdumpAST {
 				// For STABS cross references, no type number is provided,
 				// so we must lookup the type by name instead. This is
 				// riskier but I think it's the best we can really do.
-				index = importer.typeNameToDeduplicatedTypeIndex.get(type_name);
+				index = importer.typeNameToDeduplicatedTypeIndex.get(typeName);
 			}
 			if(index == null) {
-				importer.log.appendMsg("STABS", "Type lookup failed: " + type_name);
+				importer.log.appendMsg("STABS", "Type lookup failed: " + typeName);
 				return Undefined1DataType.dataType;
 			}
 			DataType type = importer.types.get(index);
 			if(type == null) {
 				Node node = importer.ast.deduplicatedTypes.get(index);
 				if(node instanceof InlineStructOrUnion) {
-					importer.log.appendMsg("STABS", "Bad type name referencing struct or union: " + type_name);
+					importer.log.appendMsg("STABS", "Bad type name referencing struct or union: " + typeName);
 					return Undefined1DataType.dataType;
 				}
 				type = node.createType(importer);

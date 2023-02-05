@@ -16,16 +16,16 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	
 	public static final String STABS_ANALYZER_NAME = "STABS";
 	public static final String STABS_ANALYZER_DESCRIPTION =
-			"Parses STABS symbols from a .mdebug section to extract information" +
-			" about data types, functions and global variables." +
+			"Parses STABS symbols from the .mdebug section to extract" +
+			" information about data types, functions and global variables." +
 			" Most of this process is handled by stdump, a C++ program which is" +
 			" bundled with releases of Ghidra Emotion Engine: Reloaded. If this" +
-			" file is missing, grab stdump " + StdumpParser.SUPPORTED_STDUMP_VERSION +
-			" from the link below, and put it in the os/ directory.\n\n" +
+			" file is missing, download stdump " + StdumpParser.SUPPORTED_STDUMP_VERSION +
+			" from the link below, and put it in the os directory.\n\n" +
 			"For more information see:\n" +
 			"https://github.com/chaoticgd/ccc";
 
-	public static final String OPTION_IMPORT_FUNCTIONS = "Import Function";
+	public static final String OPTION_IMPORT_FUNCTIONS = "Import Functions";
 	public static final String OPTION_IMPORT_FUNCTIONS_DESC =
 			"Import functions from the symbol table into Ghidra.";
 	

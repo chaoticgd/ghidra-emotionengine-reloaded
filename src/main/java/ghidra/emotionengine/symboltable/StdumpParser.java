@@ -154,7 +154,7 @@ public class StdumpParser {
 				StdumpAST.SourceFile source_file = new StdumpAST.SourceFile();
 				source_file.path = object.get("path").getAsString();
 				source_file.relativePath = object.get("relative_path").getAsString();
-				source_file.text_address = object.get("text_address").getAsInt();
+				source_file.textAddress = object.get("text_address").getAsInt();
 				for(JsonElement type_object : object.get("types").getAsJsonArray()) {
 					source_file.types.add(context.deserialize(type_object, StdumpAST.Node.class));
 				}
@@ -173,7 +173,7 @@ public class StdumpParser {
 				node = source_file;
 			} else if(descriptor.equals("type_name")) {
 				StdumpAST.TypeName type_name = new StdumpAST.TypeName();
-				type_name.type_name = object.get("type_name").getAsString();
+				type_name.typeName = object.get("type_name").getAsString();
 				if(object.has("referenced_file_index")) {
 					type_name.referencedFileIndex = object.get("referenced_file_index").getAsInt();
 				}
