@@ -12,7 +12,7 @@ The following instuction sets are currently supported:
  5. COP2 (VU0) macro instruction set
 
 This extension is based on the original [ghidra-emotionengine](https://github.com/beardypig/ghidra-emotionengine) project, with a number or changes:
-- Support for Ghidra 10.2.2.
+- Support for Ghidra 10.2.3.
 - The VU macro and MMI instruction implementations have	been replaced with pcodeop stubs. This is a bit subjective, but I think it helps a lot.
 - Support for disassembling VU microcode has been removed. If you want to reverse a VU microprogram may I suggest having a look at [vutrace](https://github.com/chaoticgd/vutrace).
 
