@@ -1,20 +1,15 @@
 # Ghidra Emotion Engine: Reloaded [![run tests](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/actions/workflows/test.yml)
 An extension for Ghidra that adds support for the PlayStation 2.
 
-The core MIPS/FPU/COP0 instruction are based off the MIPS32/64 processor included in Ghidra, with superfluous instructions stripped out and some instructions modified.
+This extension is based on the original [ghidra-emotionengine](https://github.com/beardypig/ghidra-emotionengine) project, with a number or changes.
 
-The following instuction sets are currently supported:
+## Features
 
- 1. The core MIPS instruction set
- 2. The EE core instruction set (MMI, etc)
- 3. COP0 (System control processor) instruction set
- 4. COP1 (FPU) instruction set
- 5. COP2 (VU0) macro instruction set
-
-This extension is based on the original [ghidra-emotionengine](https://github.com/beardypig/ghidra-emotionengine) project, with a number or changes:
+- Disassemble and decompile EE-specific instruction sets (MMI, VU0 macro mode, etc).
+- Recover data types, functions and global variables from ELF files with `.mdebug` sections with the included STABS Analyzer.
+- Import PCSX2 save states.
+- Fix references to global variables with the MIPS-R5900 Constant Reference Analyzer.
 - Support for Ghidra 10.2.3.
-- The VU macro and MMI instruction implementations have	been replaced with pcodeop stubs. This is a bit subjective, but I think it helps a lot.
-- Support for disassembling VU microcode has been removed. If you want to reverse a VU microprogram may I suggest having a look at [vutrace](https://github.com/chaoticgd/vutrace).
 
 ## Installation
 
@@ -28,5 +23,3 @@ If you want to build the extension yourself, install `gradle` and run:
 ```
 gradle -PGHIDRA_INSTALL_DIR=/path/to/ghidra buildExtension
 ```
-
-Only Ghidra versions 9.2 and above are supported.
