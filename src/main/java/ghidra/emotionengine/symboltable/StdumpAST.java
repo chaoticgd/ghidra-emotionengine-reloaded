@@ -49,6 +49,7 @@ public class StdumpAST {
 		ArrayList<DataType> types = new ArrayList<>(); // (data type, size in bytes)
 		ArrayList<HashMap<Integer, Integer>> stabsTypeNumberToDeduplicatedTypeIndex = new ArrayList<>();
 		HashMap<String, Integer> typeNameToDeduplicatedTypeIndex = new HashMap<>();
+		String conflictResolutionPostfix;
 		
 		// Ghidra objects.
 		TaskMonitor monitor;
@@ -104,11 +105,19 @@ public class StdumpAST {
 			return Undefined1DataType.dataType;
 		}
 		
-		String generateName() {
-			if(conflict || name == null || name.isEmpty()) {
-				return prefix + name + "__" + Integer.toString(firstFile) + "_" + Integer.toString(stabsTypeNumber);
+		void setupConflictResolutionPostfix(ImporterState importer) {
+			if(conflict) {
+				importer.conflictResolutionPostfix = "__" + Integer.toString(firstFile) + "_" + Integer.toString(stabsTypeNumber);
+			} else {
+				importer.conflictResolutionPostfix = "";
 			}
-			return prefix + name;
+		}
+		
+		String generateName(ImporterState importer) {
+			if(name == null || name.isEmpty()) {
+				return prefix + "__unnamed_" + Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
+			}
+			return prefix + name + importer.conflictResolutionPostfix;
 		}
 	}
 	
@@ -221,7 +230,7 @@ public class StdumpAST {
 		ArrayList<EnumConstant> constants = new ArrayList<EnumConstant>();
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			EnumDataType type = new EnumDataType(generateName(), 4);
+			EnumDataType type = new EnumDataType(generateName(importer), 4);
 			for(EnumConstant constant : constants) {
 				type.add(constant.name, constant.value);
 			}
@@ -236,13 +245,13 @@ public class StdumpAST {
 		ArrayList<Node> memberFunctions = new ArrayList<Node>();
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			DataType result = create_empty(importer);
+			DataType result = createEmpty(importer);
 			fill(result, importer);
 			return result;
 		}
 		
-		public DataType create_empty(ImporterState importer) {
-			String typeName = generateName();
+		public DataType createEmpty(ImporterState importer) {
+			String typeName = generateName(importer);
 			int sizeBytes = sizeBits / 8;
 			DataType type;
 			if(isStruct) {
@@ -296,7 +305,7 @@ public class StdumpAST {
 				}
 			}
 			int vtableSize = (maxVtableIndex + 1) * 4;
-			StructureDataType vtable = new StructureDataType(generateName() + "__vtable", vtableSize, importer.programTypeManager);
+			StructureDataType vtable = new StructureDataType(generateName(importer) + "__vtable", vtableSize, importer.programTypeManager);
 			for(Node node : memberFunctions) {
 				if(node instanceof FunctionType) {
 					FunctionType function = (FunctionType) node;
