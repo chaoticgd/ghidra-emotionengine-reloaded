@@ -23,6 +23,7 @@ import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSet;
 import ghidra.program.model.address.AddressSpace;
 import ghidra.program.model.data.DataType;
+import ghidra.program.model.data.DataTypeManager;
 import ghidra.program.model.data.DataUtilities;
 import ghidra.program.model.data.DataUtilities.ClearDataMode;
 import ghidra.program.model.data.PointerDataType;
@@ -47,6 +48,7 @@ public class StabsImporter extends FlatProgramAPI {
 		boolean importGlobals = true;
 		boolean markInlinedCode = true;
 		boolean outputLineNumbers = true;
+		boolean onlyRunOnce = true;
 		String overrideElfPath = "";
 		String overrideJsonPath = "";
 	}
@@ -139,6 +141,7 @@ public class StabsImporter extends FlatProgramAPI {
 		cleanupTemporaryFiles();
 		
 		if(monitor.isCancelled()) {
+			log.appendMsg("STABS", "Import operation cancelled by user.");
 			return false;
 		}
 		
@@ -152,7 +155,14 @@ public class StabsImporter extends FlatProgramAPI {
 			return false;
 		}
 		
+		if(options.onlyRunOnce && shouldBailOut(program, ast)) {
+			log.appendMsg("STABS", "Import operation cancelled since it has already been run.");
+			return false;
+		}
+
+		
 		if(monitor.isCancelled()) {
+			log.appendMsg("STABS", "Import operation cancelled by user.");
 			return false;
 		}
 		
@@ -183,6 +193,24 @@ public class StabsImporter extends FlatProgramAPI {
 		}
 		temporaryFiles.clear();
 	}
+	
+	 public boolean shouldBailOut(Program program, StdumpAST.ParsedJsonFile ast) {
+		if(ast.deduplicatedTypes.size() < 10) {
+			return false;
+		}
+		DataTypeManager dataTypeManager = program.getDataTypeManager();
+		int existingTypes = 0;
+		int newTypes = 0;
+		for(StdumpAST.Node node : ast.deduplicatedTypes) {
+			if(dataTypeManager.getDataType("/" + node.name) != null) {
+				existingTypes++;
+			} else {
+				newTypes++;
+			}
+		}
+		return existingTypes > newTypes;
+	}
+
 	
 	public void importDataTypes(StdumpAST.ImporterState importer) {
 		int type_count = importer.ast.deduplicatedTypes.size();
