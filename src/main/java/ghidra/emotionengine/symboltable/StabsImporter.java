@@ -207,13 +207,14 @@ public class StabsImporter extends FlatProgramAPI {
 		// Create all the top-level enums, structs and unions first.
 		for(int i = 0; i < type_count; i++) {
 			StdumpAST.Node node = importer.ast.deduplicatedTypes.get(i);
+			node.setupConflictResolutionPostfix(importer);
 			if(node instanceof StdumpAST.InlineEnum) {
 				StdumpAST.InlineEnum inlineEnum = (StdumpAST.InlineEnum) node;
 				DataType type = inlineEnum.createType(importer);
 				importer.types.add(importer.programTypeManager.addDataType(type, null));
 			} else if(node instanceof StdumpAST.InlineStructOrUnion) {
 				StdumpAST.InlineStructOrUnion structOrUnion = (StdumpAST.InlineStructOrUnion) node;
-				DataType type = structOrUnion.create_empty(importer);
+				DataType type = structOrUnion.createEmpty(importer);
 				importer.types.add(importer.programTypeManager.addDataType(type, null));
 			} else {
 				importer.types.add(null);
@@ -224,6 +225,7 @@ public class StabsImporter extends FlatProgramAPI {
 		// Fill in the structs and unions recursively.
 		for(int i = 0; i < type_count; i++) {
 			StdumpAST.Node node = importer.ast.deduplicatedTypes.get(i);
+			node.setupConflictResolutionPostfix(importer);
 			if(node instanceof StdumpAST.InlineStructOrUnion) {
 				StdumpAST.InlineStructOrUnion struct_or_union = (StdumpAST.InlineStructOrUnion) node;
 				DataType type = importer.types.get(i);
