@@ -82,10 +82,10 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	
 	@Override
 	public void registerOptions(Options options, Program program) {
-		options.registerOption(OPTION_IMPORT_FUNCTIONS, DEFAULT_OPTIONS.importFunctions, null, OPTION_IMPORT_FUNCTIONS);
-		options.registerOption(OPTION_IMPORT_GLOBALS, DEFAULT_OPTIONS.importGlobals, null, OPTION_IMPORT_GLOBALS);
-		options.registerOption(OPTION_INLINED_CODE, DEFAULT_OPTIONS.markInlinedCode, null, OPTION_INLINED_CODE);
-		options.registerOption(OPTION_LINE_NUMBERS, DEFAULT_OPTIONS.outputLineNumbers, null, OPTION_LINE_NUMBERS);
+		options.registerOption(OPTION_IMPORT_FUNCTIONS, DEFAULT_OPTIONS.importFunctions, null, OPTION_IMPORT_FUNCTIONS_DESC);
+		options.registerOption(OPTION_IMPORT_GLOBALS, DEFAULT_OPTIONS.importGlobals, null, OPTION_IMPORT_GLOBALS_DESC);
+		options.registerOption(OPTION_INLINED_CODE, DEFAULT_OPTIONS.markInlinedCode, null, OPTION_INLINED_CODE_DESC);
+		options.registerOption(OPTION_LINE_NUMBERS, DEFAULT_OPTIONS.outputLineNumbers, null, OPTION_LINE_NUMBERS_DESC);
 		options.registerOption(OPTION_OVERRIDE_ELF_PATH, DEFAULT_OPTIONS.overrideElfPath, null, OPTION_OVERRIDE_ELF_PATH_DESC);
 		options.registerOption(OPTION_OVERRIDE_JSON_PATH, DEFAULT_OPTIONS.overrideJsonPath, null, OPTION_OVERRIDE_JSON_PATH_DESC);
 	}
