@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import ghidra.app.cmd.function.CreateFunctionCmd;
+import ghidra.app.cmd.label.DeleteLabelCmd;
 import ghidra.app.util.exporter.ElfExporter;
 import ghidra.app.util.exporter.ExporterException;
 import ghidra.app.util.importer.MessageLog;
@@ -35,6 +36,7 @@ import ghidra.program.model.listing.Program;
 import ghidra.program.model.listing.Variable;
 import ghidra.program.model.symbol.SourceType;
 import ghidra.program.model.symbol.Symbol;
+import ghidra.program.model.symbol.SymbolIterator;
 import ghidra.program.model.symbol.SymbolTable;
 import ghidra.program.model.util.CodeUnitInsertionException;
 import ghidra.util.exception.DuplicateNameException;
@@ -269,6 +271,8 @@ public class StabsImporter extends FlatProgramAPI {
 		monitor.setMaximum(importer.ast.files.size());
 		monitor.setProgress(0);
 		
+		removeJunkLabels(program);
+		
 		for(int i = 0; i < importer.ast.files.size(); i++) {
 			StdumpAST.SourceFile sourceFile = (StdumpAST.SourceFile) importer.ast.files.get(i);
 			for(StdumpAST.Node functionNode : sourceFile.functions) {
@@ -280,7 +284,8 @@ public class StabsImporter extends FlatProgramAPI {
 					Address high = toAddr(def.addressRange.high - 1);
 					AddressSet range = new AddressSet(low, high);
 					Function function = findOrCreateFunction(def, low, high, range);
-					setFunctionName(function, def, sourceFile, low);
+					setFunctionName(function, def, sourceFile, low, program);
+					function.setComment(sourceFile.path);
 					if(type.returnType != null) {
 						try {
 							function.setReturnType(type.returnType.createType(importer), SourceType.ANALYSIS);
@@ -304,7 +309,23 @@ public class StabsImporter extends FlatProgramAPI {
 			monitor.setProgress(i);
 		}
 	}
-
+	
+	public void removeJunkLabels(Program program) {
+		final String JUNK_LABELS[] = {
+				"__gnu_compiled_c",
+				"__gnu_compiled_cplusplus",
+				"gcc2_compiled."
+		};
+		
+		SymbolTable symbolTable = program.getSymbolTable();
+		for(String junkLabel : JUNK_LABELS) {
+			SymbolIterator iterator = symbolTable.getSymbols(junkLabel);
+			while(iterator.hasNext()) {
+				symbolTable.removeSymbolSpecial(iterator.next());
+			}
+		}
+	}
+	
 	private Function findOrCreateFunction(StdumpAST.FunctionDefinition def, Address low, Address high, AddressSet range) {
 		Function function = getFunctionAt(low);
 		if(function == null) {
@@ -324,27 +345,12 @@ public class StabsImporter extends FlatProgramAPI {
 	}
 	
 	private void setFunctionName(Function function, StdumpAST.FunctionDefinition def,
-			StdumpAST.SourceFile sourceFile, Address low) {
-		// Remove spam like "gcc2_compiled." and remove the existing label for
-		// the function name so it can be reapplied below.
-		SymbolTable symbolTable = program.getSymbolTable();
-		Symbol[] existingSymbols = symbolTable.getSymbols(low);
-		for(Symbol existingSymbol : existingSymbols) {
-			String name = existingSymbol.getName();
-			if(name.equals("__gnu_compiled_cplusplus") || name.equals("gcc2_compiled.") || name.equals(def.name)) {
-				symbolTable.removeSymbolSpecial(existingSymbol);
-			}
-		}
-		
-		// Ghidra will sometimes find the wrong label and use it as a function
-		// name e.g. "gcc2_compiled." so it's important that we set the name
-		// explicitly here.
+			StdumpAST.SourceFile sourceFile, Address low, Program program) {
 		try {
 			function.setName(def.name, SourceType.ANALYSIS);
 		} catch (DuplicateNameException | InvalidInputException e) {
 			log.appendException(e);
 		}
-		function.setComment(sourceFile.path);
 	}
 	
 	private HashSet<String> fillInParameters(Function function, StdumpAST.ImporterState importer,
