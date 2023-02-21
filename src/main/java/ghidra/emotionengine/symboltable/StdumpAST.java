@@ -277,7 +277,12 @@ public class StdumpAST {
 						if(node.name != null && node.name.equals("__vtable")) {
 							field = new PointerDataType(createVtable(importer));
 						} else {
-							node.prefix += name + "__";
+							if(prefix != null) {
+								node.prefix += prefix;
+							}
+							if(name != null) {
+								node.prefix += name + "__";
+							}
 							field = replaceVoidWithUndefined1(node.createType(importer));
 						}
 						addField(type, field, node, node.relativeOffsetBytes, importer);
@@ -287,6 +292,12 @@ public class StdumpAST {
 				Union type = (Union) dest;
 				for(Node node : fields) {
 					if(node.storageClass != StorageClass.STATIC) {
+						if(prefix != null) {
+							node.prefix += prefix;
+						}
+						if(name != null) {
+							node.prefix += name + "__";
+						}
 						DataType field = replaceVoidWithUndefined1(node.createType(importer));
 						type.add(field, field.getLength(), node.name, "");
 					}
