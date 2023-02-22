@@ -284,7 +284,7 @@ public class StabsImporter extends FlatProgramAPI {
 					Address high = toAddr(def.addressRange.high - 1);
 					AddressSet range = new AddressSet(low, high);
 					Function function = findOrCreateFunction(def, low, high, range);
-					setFunctionName(function, def, sourceFile, low, program);
+					setFunctionName(function, def);
 					function.setComment(sourceFile.path);
 					if(type.returnType != null) {
 						try {
@@ -344,13 +344,12 @@ public class StabsImporter extends FlatProgramAPI {
 		return function;
 	}
 	
-	private void setFunctionName(Function function, StdumpAST.FunctionDefinition def,
-			StdumpAST.SourceFile sourceFile, Address low, Program program) {
+	private void setFunctionName(Function function, StdumpAST.FunctionDefinition def) {
 		try {
 			function.setName(def.name, SourceType.ANALYSIS);
-		} catch (DuplicateNameException | InvalidInputException e) {
+		} catch (InvalidInputException e) {
 			log.appendException(e);
-		}
+		} catch (DuplicateNameException e) {}
 	}
 	
 	private HashSet<String> fillInParameters(Function function, StdumpAST.ImporterState importer,
