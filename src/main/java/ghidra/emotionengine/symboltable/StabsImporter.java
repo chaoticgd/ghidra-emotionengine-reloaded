@@ -13,9 +13,8 @@ import java.util.HashSet;
 import java.util.Map;
 
 import ghidra.app.cmd.function.CreateFunctionCmd;
-import ghidra.app.cmd.label.DeleteLabelCmd;
-import ghidra.app.util.exporter.ElfExporter;
 import ghidra.app.util.exporter.ExporterException;
+import ghidra.app.util.exporter.OriginalFileExporter;
 import ghidra.app.util.importer.MessageLog;
 import ghidra.framework.Application;
 import ghidra.framework.Platform;
@@ -35,7 +34,6 @@ import ghidra.program.model.listing.ParameterImpl;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.listing.Variable;
 import ghidra.program.model.symbol.SourceType;
-import ghidra.program.model.symbol.Symbol;
 import ghidra.program.model.symbol.SymbolIterator;
 import ghidra.program.model.symbol.SymbolTable;
 import ghidra.program.model.util.CodeUnitInsertionException;
@@ -90,10 +88,7 @@ public class StabsImporter extends FlatProgramAPI {
 				}
 				temporaryFiles.add(elfFile);
 				
-				// Write the contents of the current program to the ELF file.
-				// TODO: Switch to using OriginalFileExporter instead of
-				// ElfExporter when the next Ghidra update comes out.
-				ElfExporter exporter = new ElfExporter();
+				OriginalFileExporter exporter = new OriginalFileExporter();
 				if(exporter.canExportDomainObject(program.getClass())) {
 					try {
 						monitor.setMessage("STABS - Writing temporary ELF file...");
@@ -386,15 +381,16 @@ public class StabsImporter extends FlatProgramAPI {
 		} else {
 			path = sourceFile.relativePath;
 		}
-		boolean was_inlining = false;
+		String lastPath = "";
 		for(StdumpAST.SubSourceFile sub : def.subSourceFiles) {
-			boolean is_inlining = !sub.relativePath.equals(path);
-			if(is_inlining && !was_inlining) {
-				setPreComment(toAddr(sub.address), "inlined from " + sub.relativePath);
-			} else if(!is_inlining && was_inlining) {
-				setPreComment(toAddr(sub.address), "end of inlined section");
+			if(!sub.relativePath.equals(lastPath) && sub.address >= def.addressRange.low && sub.address < def.addressRange.high) {
+				if(!sub.relativePath.equals(path)) {
+					setPreComment(toAddr(sub.address), "inlined from " + sub.relativePath);
+				} else {
+					setPreComment(toAddr(sub.address), "end of inlined section");
+				}
 			}
-			was_inlining = is_inlining;
+			lastPath = sub.relativePath;
 		}
 	}
 	
