@@ -7,16 +7,19 @@ set -e
 version='v1.2'
 
 pushd $(dirname -- "$0")
+rm -f "ccc_$(echo $version)_linux.zip"
+rm -f "ccc_$(echo $version)_mac.zip"
+rm -f "ccc_$(echo $version)_windows.zip"
 wget "https://github.com/chaoticgd/ccc/releases/download/$(echo $version)/ccc_$(echo $version)_linux.zip"
 wget "https://github.com/chaoticgd/ccc/releases/download/$(echo $version)/ccc_$(echo $version)_mac.zip"
 wget "https://github.com/chaoticgd/ccc/releases/download/$(echo $version)/ccc_$(echo $version)_windows.zip"
-mkdir linux_x86_64
-mkdir mac_x86_64
-mkdir win_x86_64
+mkdir -p linux_x86_64
+mkdir -p mac_x86_64
+mkdir -p win_x86_64
 unzip -j "ccc_$(echo $version)_linux.zip" "ccc_$(echo $version)_linux/stdump" -d linux_x86_64
 unzip -j "ccc_$(echo $version)_mac.zip" "ccc_$(echo $version)_mac/stdump" -d mac_x86_64
 unzip -j "ccc_$(echo $version)_windows.zip" "ccc_$(echo $version)_windows/stdump.exe" -d win_x86_64
-rm "ccc_$(echo $version)_linux.zip"
-rm "ccc_$(echo $version)_mac.zip"
-rm "ccc_$(echo $version)_windows.zip"
+rm -f "ccc_$(echo $version)_linux.zip"
+rm -f "ccc_$(echo $version)_mac.zip"
+rm -f "ccc_$(echo $version)_windows.zip"
 popd
