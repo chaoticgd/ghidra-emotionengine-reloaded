@@ -381,15 +381,16 @@ public class StabsImporter extends FlatProgramAPI {
 		} else {
 			path = sourceFile.relativePath;
 		}
-		boolean was_inlining = false;
+		String lastPath = "";
 		for(StdumpAST.SubSourceFile sub : def.subSourceFiles) {
-			boolean is_inlining = !sub.relativePath.equals(path);
-			if(is_inlining && !was_inlining) {
-				setPreComment(toAddr(sub.address), "inlined from " + sub.relativePath);
-			} else if(!is_inlining && was_inlining) {
-				setPreComment(toAddr(sub.address), "end of inlined section");
+			if(!sub.relativePath.equals(lastPath) && sub.address >= def.addressRange.low && sub.address < def.addressRange.high) {
+				if(!sub.relativePath.equals(path)) {
+					setPreComment(toAddr(sub.address), "inlined from " + sub.relativePath);
+				} else {
+					setPreComment(toAddr(sub.address), "end of inlined section");
+				}
 			}
-			was_inlining = is_inlining;
+			lastPath = sub.relativePath;
 		}
 	}
 	
