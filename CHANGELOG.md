@@ -1,5 +1,11 @@
 # Changelog
 
+# v2.1.5
+
+- Added support for Ghidra 10.3.
+- stabs: Prevent erroneous inlining-related comments from being generated.
+- stabs: Bumped stdump version.
+
 # v2.1.4
 
 - stabs: Silence the error that gets thrown when a function name is already applied.
