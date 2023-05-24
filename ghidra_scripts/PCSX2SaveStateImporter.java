@@ -63,10 +63,9 @@ public class PCSX2SaveStateImporter extends GhidraScript {
         monitor.setMessage("Loading Main Memory...");
         for (MemoryBlock block : blocks) {
             monitor.checkCanceled();
-            if (block.getEnd().getOffset() > maxAddress) {
-                if (block.getEnd().getOffset() < MAX_ADDRESS) {
-                    maxAddress = block.getEnd().getOffset();
-                }
+            long end = block.getEnd().getOffset();
+            if (end > maxAddress && end < MAX_ADDRESS && !block.isOverlay()) {
+                maxAddress = block.getEnd().getOffset();
             }
             if (block.isWrite() && !block.isExecute()) {
                 // only load and replace writable, non-executable memory blocks
