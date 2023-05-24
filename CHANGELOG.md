@@ -1,5 +1,9 @@
 # Changelog
 
+# v2.1.6
+
+- The PCSX2 save state importer will no longer crash when encountering certain overlay sections.
+
 # v2.1.5
 
 - Added support for Ghidra 10.3.
