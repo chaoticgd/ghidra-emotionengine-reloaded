@@ -2,7 +2,7 @@
 
 # v2.1.6
 
-- Fixed an issue with the PCSX2 save state importer.
+- The PCSX2 save state importer will no longer crash when encountering certain overlay sections.
 
 # v2.1.5
 
