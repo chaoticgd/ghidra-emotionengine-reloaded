@@ -1,5 +1,9 @@
 # Changelog
 
+# v2.1.6
+
+- Fixed an issue with the PCSX2 save state importer.
+
 # v2.1.5
 
 - Added support for Ghidra 10.3.
