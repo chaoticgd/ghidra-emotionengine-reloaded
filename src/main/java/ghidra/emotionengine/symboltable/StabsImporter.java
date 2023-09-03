@@ -212,6 +212,8 @@ public class StabsImporter extends FlatProgramAPI {
 
 	
 	public void importDataTypes(StdumpAST.ImporterState importer) {
+		importer.stage = StdumpAST.ImportStage.TYPES;
+		
 		int type_count = importer.ast.deduplicatedTypes.size();
 		
 		monitor.setMessage("STABS - Importing data types...");
@@ -285,11 +287,13 @@ public class StabsImporter extends FlatProgramAPI {
 					function.setComment(sourceFile.path);
 					if(type.returnType != null) {
 						try {
+							importer.stage = StdumpAST.ImportStage.RETURN_TYPE;
 							function.setReturnType(type.returnType.createType(importer), SourceType.ANALYSIS);
 						} catch (InvalidInputException e) {
 							log.appendException(e);
 						}
 					}
+					importer.stage = StdumpAST.ImportStage.PARAMETERS;
 					HashSet<String> parameterNames = fillInParameters(function, importer, def, type);
 					if(importer.outputLineNumbers) {
 						for(StdumpAST.LineNumberPair pair : def.lineNumbers) {
@@ -299,6 +303,7 @@ public class StabsImporter extends FlatProgramAPI {
 					if(importer.markInlinedCode) {
 						markInlinedCode(def, sourceFile);
 					}
+					importer.stage = StdumpAST.ImportStage.LOCAL_VARIABLES;
 					fillInLocalVariables(function, importer, def, parameterNames);
 				}
 			}
@@ -422,6 +427,8 @@ public class StabsImporter extends FlatProgramAPI {
 	}
 	
 	public void importGlobalVariables(StdumpAST.ImporterState importer) {
+		importer.stage = StdumpAST.ImportStage.GLOBAL_VARIABLES;
+		
 		monitor.setMessage("STABS - Importing global variables...");
 		monitor.setMaximum(importer.ast.files.size());
 		monitor.setProgress(0);

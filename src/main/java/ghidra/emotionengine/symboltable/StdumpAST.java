@@ -37,6 +37,14 @@ public class StdumpAST {
 		ArrayList<Node> deduplicatedTypes = new ArrayList<Node>();
 	}
 	
+	public static enum ImportStage {
+		TYPES,
+		RETURN_TYPE,
+		PARAMETERS,
+		LOCAL_VARIABLES,
+		GLOBAL_VARIABLES
+	}
+	
 	public static class ImporterState {
 		// Options.
 		boolean embedBaseClasses = true;
@@ -47,6 +55,7 @@ public class StdumpAST {
 		ParsedJsonFile ast;
 		
 		// Internal state.
+		ImportStage stage; // Used to name types defined inline in global/local variable declarations.
 		ArrayList<DataType> types = new ArrayList<>(); // (data type, size in bytes)
 		ArrayList<HashMap<Integer, Integer>> stabsTypeNumberToDeduplicatedTypeIndex = new ArrayList<>();
 		HashMap<String, Integer> typeNameToDeduplicatedTypeIndex = new HashMap<>();
@@ -128,7 +137,15 @@ public class StdumpAST {
 				}
 			}
 			if(name == null || name.isEmpty()) {
-				return prefixString + "unnamed_" + Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
+				String dummyName = "unnamed_";
+				switch(importer.stage) {
+					case TYPES: dummyName = "unnamed_"; break;
+					case RETURN_TYPE: dummyName = "anonymousreturntype_"; break;
+					case PARAMETERS: dummyName = "anonymousparametertype_"; break;
+					case LOCAL_VARIABLES: dummyName = "anonymouslocaltype_"; break;
+					case GLOBAL_VARIABLES: dummyName = "anonymousglobaltype_"; break;
+				}
+				return prefixString + dummyName + Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
 			}
 			return prefixString + name + importer.conflictResolutionPostfix;
 		}
