@@ -51,6 +51,8 @@ public class StdumpAST {
 		ArrayList<HashMap<Integer, Integer>> stabsTypeNumberToDeduplicatedTypeIndex = new ArrayList<>();
 		HashMap<String, Integer> typeNameToDeduplicatedTypeIndex = new HashMap<>();
 		String conflictResolutionPostfix;
+		boolean hadBadTypeLookup = false;
+		HashMap<String, StructureDataType> forwardDeclaredTypes = new HashMap<>();
 		
 		// Ghidra objects.
 		TaskMonitor monitor;
@@ -277,6 +279,9 @@ public class StdumpAST {
 						Node baseClass = baseClasses.get(i);
 						DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
 						String baseClassName = "base_class_" + Integer.toString(baseClass.absoluteOffsetBytes);
+						if(baseClass instanceof TypeName) {
+							baseClassName += "_" + ((TypeName) baseClass).typeName;
+						}
 						addField(type, baseType, baseClass, baseClass.absoluteOffsetBytes, baseClassName, importer);
 					}
 				}
@@ -455,8 +460,7 @@ public class StdumpAST {
 			}
 			Integer index = lookupTypeIndex(importer);
 			if(index == null) {
-				importer.log.appendMsg("STABS", "Type lookup failed: " + typeName);
-				return Undefined1DataType.dataType;
+				return createForwardDeclaredType(importer);
 			}
 			DataType type = importer.types.get(index);
 			if(type == null) {
@@ -467,6 +471,21 @@ public class StdumpAST {
 				}
 				type = node.createType(importer);
 				importer.types.set(index, type);
+			}
+			return type;
+		}
+		
+		public DataType createForwardDeclaredType(ImporterState importer) {
+			if(!importer.hadBadTypeLookup) {
+				importer.log.appendMsg("STABS", "Type lookup failures are normal in cases where a type is forward declared in a translation unit with symbols, but is not defined in one.");
+				importer.hadBadTypeLookup = true;
+			}
+			importer.log.appendMsg("STABS", "Type lookup failed: " + typeName);
+			StructureDataType type = importer.forwardDeclaredTypes.get(typeName);
+			if(type == null) {
+				type = new StructureDataType(typeName, 1, importer.programTypeManager);
+				type.setDescription("Probably forward declared, but not defined, in a translation unit with symbols.");
+				importer.forwardDeclaredTypes.put(typeName, type);
 			}
 			return type;
 		}

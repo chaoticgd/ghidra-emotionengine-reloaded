@@ -3,6 +3,10 @@
 ## v2.1.7
 
 - Added support for Ghidra 10.3.3.
+- stabs: Embed fields from base classes in sub classes by default.
+- stabs: When base classes are embedded, the vtable pointer is now given the type of the sub class. This improves decompilation.
+- stabs: When base classes are not embedded, the field generated for the base class is now given a name.
+- stabs: Dummy structs will now be created for types that are forward declared in a translation unit with symbols, but not defined in one.
 
 ## v2.1.6
 
