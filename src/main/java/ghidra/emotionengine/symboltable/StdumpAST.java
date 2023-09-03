@@ -128,7 +128,7 @@ public class StdumpAST {
 				}
 			}
 			if(name == null || name.isEmpty()) {
-				return prefixString + "__unnamed_" + Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
+				return prefixString + "unnamed_" + Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
 			}
 			return prefixString + name + importer.conflictResolutionPostfix;
 		}
