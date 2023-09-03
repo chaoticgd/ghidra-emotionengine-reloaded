@@ -6,7 +6,7 @@
 - stabs: Embed fields from base classes in sub classes by default.
 - stabs: When base classes are embedded, the vtable pointer is now given the type of the sub class. This improves decompilation.
 - stabs: When base classes are not embedded, the field generated for the base class is now given a name.
-- stabs: Added a message explaining what type lookup errors are when they are reported.
+- stabs: Dummy structs will now be created for types that are forward declared in a translation unit with symbols, but not defined in one.
 
 ## v2.1.6
 
