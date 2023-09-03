@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.7
+
+- stabs: Fixed a number of severe issues relating to inheritance, such as base classes being embedded in sub classes at the wrong offset, and types being misnamed.
+
 ## v2.1.6
 
 - Added support for Ghidra 10.3.3.
