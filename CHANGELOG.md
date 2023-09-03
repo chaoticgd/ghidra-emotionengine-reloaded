@@ -1,16 +1,24 @@
 # Changelog
 
-# v2.1.5
+## v2.1.7
+
+- Added support for Ghidra 10.3.3.
+
+## v2.1.6
+
+- The PCSX2 save state importer will no longer crash when encountering certain overlay sections.
+
+## v2.1.5
 
 - Added support for Ghidra 10.3.
 - stabs: Prevent erroneous inlining-related comments from being generated.
 - stabs: Bumped stdump version.
 
-# v2.1.4
+## v2.1.4
 
 - stabs: Silence the error that gets thrown when a function name is already applied.
 
-# v2.1.3
+## v2.1.3
 
 - stabs: Fixed an issue where Ghidra would mix up types in some cases for structures defined inline inside unions.
 - stabs: Remove junk labels such as `gcc2_compiled.` during analysis so that Ghidra doesn't confuse them for the real function names.
