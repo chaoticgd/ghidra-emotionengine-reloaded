@@ -51,6 +51,7 @@ public class StdumpAST {
 		ArrayList<HashMap<Integer, Integer>> stabsTypeNumberToDeduplicatedTypeIndex = new ArrayList<>();
 		HashMap<String, Integer> typeNameToDeduplicatedTypeIndex = new HashMap<>();
 		String conflictResolutionPostfix;
+		boolean hadBadTypeLookup = false;
 		
 		// Ghidra objects.
 		TaskMonitor monitor;
@@ -458,6 +459,10 @@ public class StdumpAST {
 			}
 			Integer index = lookupTypeIndex(importer);
 			if(index == null) {
+				if(!importer.hadBadTypeLookup) {
+					importer.log.appendMsg("STABS", "Type lookup failures are normal in cases where a type is forward declared in a translation unit with symbols, but is not defined in one.");
+					importer.hadBadTypeLookup = true;
+				}
 				importer.log.appendMsg("STABS", "Type lookup failed: " + typeName);
 				return Undefined1DataType.dataType;
 			}
