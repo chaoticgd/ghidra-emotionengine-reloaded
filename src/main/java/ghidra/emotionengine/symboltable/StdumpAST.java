@@ -268,7 +268,8 @@ public class StdumpAST {
 				for(int i = 0; i < baseClasses.size(); i++) {
 					Node baseClass = baseClasses.get(i);
 					DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
-					addField(type, baseType, baseClass, baseClass.absoluteOffsetBytes, importer);
+					String baseClassName = "base_class_" + Integer.toString(baseClass.absoluteOffsetBytes);
+					addField(type, baseType, baseClass, baseClass.absoluteOffsetBytes, baseClassName, importer);
 				}
 				for(Node node : fields) {
 					if(node.storageClass != StorageClass.STATIC) {
@@ -285,7 +286,7 @@ public class StdumpAST {
 							}
 							field = replaceVoidWithUndefined1(node.createType(importer));
 						}
-						addField(type, field, node, node.relativeOffsetBytes, importer);
+						addField(type, field, node, node.relativeOffsetBytes, node.name, importer);
 					}
 				}
 			} else {
@@ -332,7 +333,7 @@ public class StdumpAST {
 			return vtable;
 		}
 		
-		public void addField(Structure structure, DataType field, Node node, int offset, ImporterState importer) {
+		public void addField(Structure structure, DataType field, Node node, int offset, String fieldName, ImporterState importer) {
 			boolean isBitfield = node instanceof BitField;
 			boolean isBeyondEnd = offset + field.getLength() > sizeBits / 8;
 			boolean isZeroLengthStruct = false;
@@ -344,7 +345,7 @@ public class StdumpAST {
 			}
 			if(!isBitfield && !isBeyondEnd && !isZeroLengthStruct) {
 				try {
-					structure.replaceAtOffset(offset, field, field.getLength(), node.name, "");
+					structure.replaceAtOffset(offset, field, field.getLength(), fieldName, "");
 				} catch(IllegalArgumentException e) {
 					importer.log.appendException(e);
 				}
