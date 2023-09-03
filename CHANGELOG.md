@@ -3,6 +3,7 @@
 ## v2.1.7
 
 - stabs: Fixed a number of severe issues relating to inheritance, such as base classes being embedded in sub classes at the wrong offset, and types being misnamed.
+- stabs: Anonymous types defined as part of a global variable, function, or local variable declaration are now named appropriately.
 
 ## v2.1.6
 
