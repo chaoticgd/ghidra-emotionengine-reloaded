@@ -53,6 +53,7 @@ public class StdumpAST {
 		String conflictResolutionPostfix;
 		boolean hadBadTypeLookup = false;
 		HashMap<String, StructureDataType> forwardDeclaredTypes = new HashMap<>();
+		ArrayList<String> prefixStack = new ArrayList<>(); // Used to name nested structs.
 		
 		// Ghidra objects.
 		TaskMonitor monitor;
@@ -89,7 +90,6 @@ public class StdumpAST {
 		boolean conflict = false;
 		int stabsTypeNumber = -1;
 		
-		String prefix = ""; // Used to name nested structs.
 		boolean isInCreateTypeCall = false; // Prevent infinite recursion.
 		
 		public DataType createType(ImporterState importer) {
@@ -116,11 +116,21 @@ public class StdumpAST {
 			}
 		}
 		
-		String generateName(ImporterState importer) {
-			if(name == null || name.isEmpty()) {
-				return prefix + "__unnamed_" + Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
+		String generateName(ImporterState importer, boolean addPrefix) {
+			String prefixString = "";
+			if(addPrefix) {
+				for(String prefixPart : importer.prefixStack) {
+					if(prefixPart != null) {
+						prefixString += prefixPart + "__";
+					} else {
+						prefixString += "unnamed__";
+					}
+				}
 			}
-			return prefix + name + importer.conflictResolutionPostfix;
+			if(name == null || name.isEmpty()) {
+				return prefixString + "__unnamed_" + Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
+			}
+			return prefixString + name + importer.conflictResolutionPostfix;
 		}
 	}
 	
@@ -233,7 +243,7 @@ public class StdumpAST {
 		ArrayList<EnumConstant> constants = new ArrayList<EnumConstant>();
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			EnumDataType type = new EnumDataType(generateName(importer), 4);
+			EnumDataType type = new EnumDataType(generateName(importer, true), 4);
 			for(EnumConstant constant : constants) {
 				type.add(constant.name, constant.value);
 			}
@@ -254,7 +264,7 @@ public class StdumpAST {
 		}
 		
 		public DataType createEmpty(ImporterState importer) {
-			String typeName = generateName(importer);
+			String typeName = generateName(importer, true);
 			int sizeBytes = sizeBits / 8;
 			DataType type;
 			if(isStruct) {
@@ -275,7 +285,9 @@ public class StdumpAST {
 						if(baseClass == null) {
 							continue;
 						}
+						importer.prefixStack.add(baseClassNode.name);
 						fill(dest, baseOffset + baseClassTypeName.absoluteOffsetBytes, baseClass, subClassNode, importer);
+						importer.prefixStack.remove(importer.prefixStack.size() - 1);
 					} else {
 						Node baseClass = baseClassNode.baseClasses.get(i);
 						DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
@@ -293,14 +305,9 @@ public class StdumpAST {
 						if(node.name != null && node.name.equals("__vtable")) {
 							field = new PointerDataType(subClassNode.createVtable(importer));
 						} else {
-							if(subClassNode.prefix != null) {
-								node.prefix += subClassNode.prefix;
-							}
-							if(subClassNode.name != null) {
-								node.prefix += subClassNode.name + "__";
-							}
+							importer.prefixStack.add(baseClassNode.name);
 							field = replaceVoidWithUndefined1(node.createType(importer));
-							node.prefix = "";
+							importer.prefixStack.remove(importer.prefixStack.size() - 1);
 						}
 						boolean isInherited = baseClassNode != subClassNode;
 						addField(type, field, node, baseOffset + node.relativeOffsetBytes, node.name, isInherited, baseClassNode, subClassNode, importer);
@@ -313,13 +320,9 @@ public class StdumpAST {
 				Union type = (Union) dest;
 				for(Node node : baseClassNode.fields) {
 					if(node.storageClass != StorageClass.STATIC) {
-						if(subClassNode != null) {
-							node.prefix += subClassNode.prefix;
-						}
-						if(subClassNode.name != null) {
-							node.prefix += subClassNode.name + "__";
-						}
+						importer.prefixStack.add(baseClassNode.name);
 						DataType field = replaceVoidWithUndefined1(node.createType(importer));
+						importer.prefixStack.remove(importer.prefixStack.size() - 1);
 						type.add(field, field.getLength(), node.name, "");
 					}
 				}
@@ -350,8 +353,9 @@ public class StdumpAST {
 		}
 		
 		public DataType createVtable(ImporterState importer) {
+			String vtableName = generateName(importer, false) + "__vtable";
 			int vtableSize = calculateVtableSize(importer);
-			StructureDataType vtable = new StructureDataType(generateName(importer) + "__vtable", vtableSize, importer.programTypeManager);
+			StructureDataType vtable = new StructureDataType(vtableName, vtableSize, importer.programTypeManager);
 			fillVtable(vtable, importer);
 			return vtable;
 		}
