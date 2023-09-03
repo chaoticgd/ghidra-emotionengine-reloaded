@@ -44,6 +44,7 @@ import ghidra.util.task.TaskMonitor;
 public class StabsImporter extends FlatProgramAPI {
 
 	public static class ImportOptions {
+		boolean embedBaseClasses = true;
 		boolean importFunctions = true;
 		boolean importGlobals = true;
 		boolean markInlinedCode = true;
@@ -165,6 +166,7 @@ public class StabsImporter extends FlatProgramAPI {
 		
 		// Now actually import all this data into Ghidra.
 		StdumpAST.ImporterState importer = new StdumpAST.ImporterState();
+		importer.embedBaseClasses = options.embedBaseClasses;
 		importer.markInlinedCode = options.markInlinedCode;
 		importer.outputLineNumbers = options.outputLineNumbers;
 		importer.ast = ast;
@@ -254,7 +256,7 @@ public class StabsImporter extends FlatProgramAPI {
 			if(node instanceof StdumpAST.InlineStructOrUnion) {
 				StdumpAST.InlineStructOrUnion struct_or_union = (StdumpAST.InlineStructOrUnion) node;
 				DataType type = importer.types.get(i);
-				struct_or_union.fill(type, importer);
+				struct_or_union.fill(type, 0, struct_or_union, importer);
 				importer.types.set(i, type);
 			}
 			monitor.setProgress(type_count + i);
