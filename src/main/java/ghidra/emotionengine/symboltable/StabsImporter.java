@@ -256,7 +256,7 @@ public class StabsImporter extends FlatProgramAPI {
 			if(node instanceof StdumpAST.InlineStructOrUnion) {
 				StdumpAST.InlineStructOrUnion struct_or_union = (StdumpAST.InlineStructOrUnion) node;
 				DataType type = importer.types.get(i);
-				struct_or_union.fill(type, 0, struct_or_union, importer);
+				StdumpAST.InlineStructOrUnion.fill(type, 0, struct_or_union, struct_or_union, importer);
 				importer.types.set(i, type);
 			}
 			monitor.setProgress(type_count + i);

@@ -89,7 +89,7 @@ public class StdumpAST {
 		boolean conflict = false;
 		int stabsTypeNumber = -1;
 		
-		String prefix = ""; // Used for nested structs.
+		String prefix = ""; // Used to name nested structs.
 		boolean isInCreateTypeCall = false; // Prevent infinite recursion.
 		
 		public DataType createType(ImporterState importer) {
@@ -249,7 +249,7 @@ public class StdumpAST {
 		
 		public DataType createTypeImpl(ImporterState importer) {
 			DataType result = createEmpty(importer);
-			fill(result, 0, this, importer);
+			fill(result, 0, this, this, importer);
 			return result;
 		}
 		
@@ -265,53 +265,59 @@ public class StdumpAST {
 			return type;
 		}
 		
-		public void fill(DataType dest, int baseOffset, InlineStructOrUnion topLevelNode, ImporterState importer) {
-			if(isStruct) {
+		public static void fill(DataType dest, int baseOffset, InlineStructOrUnion baseClassNode, InlineStructOrUnion subClassNode, ImporterState importer) {
+			if(baseClassNode.isStruct) {
 				Structure type = (Structure) dest;
-				for(int i = 0; i < baseClasses.size(); i++) {
+				for(int i = 0; i < baseClassNode.baseClasses.size(); i++) {
 					if(importer.embedBaseClasses) {
-						InlineStructOrUnion baseClass = lookupBaseClass(i, importer);
+						Node baseClassTypeName = baseClassNode.baseClasses.get(i);
+						InlineStructOrUnion baseClass = baseClassNode.lookupBaseClass(i, importer);
 						if(baseClass == null) {
 							continue;
 						}
-						baseClass.fill(dest, baseClass.absoluteOffsetBytes, topLevelNode, importer);
+						fill(dest, baseOffset + baseClassTypeName.absoluteOffsetBytes, baseClass, subClassNode, importer);
 					} else {
-						Node baseClass = baseClasses.get(i);
+						Node baseClass = baseClassNode.baseClasses.get(i);
 						DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
 						String baseClassName = "base_class_" + Integer.toString(baseClass.absoluteOffsetBytes);
 						if(baseClass instanceof TypeName) {
 							baseClassName += "_" + ((TypeName) baseClass).typeName;
 						}
-						addField(type, baseType, baseClass, baseClass.absoluteOffsetBytes, baseClassName, importer);
+						addField(type, baseType, baseClass, baseOffset + baseClass.absoluteOffsetBytes, baseClassName, false, baseClassNode, subClassNode, importer);
 					}
 				}
-				for(Node node : fields) {
+				for(Node node : baseClassNode.fields) {
 					if(node.storageClass != StorageClass.STATIC) {
 						// Currently we don't try to import bit fields.
 						DataType field = null;
 						if(node.name != null && node.name.equals("__vtable")) {
-							field = new PointerDataType(topLevelNode.createVtable(importer));
+							field = new PointerDataType(subClassNode.createVtable(importer));
 						} else {
-							if(prefix != null) {
-								node.prefix += prefix;
+							if(subClassNode.prefix != null) {
+								node.prefix += subClassNode.prefix;
 							}
-							if(name != null) {
-								node.prefix += name + "__";
+							if(subClassNode.name != null) {
+								node.prefix += subClassNode.name + "__";
 							}
 							field = replaceVoidWithUndefined1(node.createType(importer));
+							node.prefix = "";
 						}
-						addField(type, field, node, node.relativeOffsetBytes, node.name, importer);
+						boolean isInherited = baseClassNode != subClassNode;
+						addField(type, field, node, baseOffset + node.relativeOffsetBytes, node.name, isInherited, baseClassNode, subClassNode, importer);
 					}
 				}
 			} else {
+				if(baseClassNode != subClassNode) {
+					importer.log.appendMsg("baseClassNode != subClassNode for union");
+				}
 				Union type = (Union) dest;
-				for(Node node : fields) {
+				for(Node node : baseClassNode.fields) {
 					if(node.storageClass != StorageClass.STATIC) {
-						if(prefix != null) {
-							node.prefix += prefix;
+						if(subClassNode != null) {
+							node.prefix += subClassNode.prefix;
 						}
-						if(name != null) {
-							node.prefix += name + "__";
+						if(subClassNode.name != null) {
+							node.prefix += subClassNode.name + "__";
 						}
 						DataType field = replaceVoidWithUndefined1(node.createType(importer));
 						type.add(field, field.getLength(), node.name, "");
@@ -320,9 +326,9 @@ public class StdumpAST {
 			}
 		}
 		
-		public void addField(Structure structure, DataType field, Node node, int offset, String fieldName, ImporterState importer) {
+		public static void addField(Structure structure, DataType field, Node node, int offset, String fieldName, boolean isInherited, InlineStructOrUnion baseClassNode, InlineStructOrUnion subClassNode, ImporterState importer) {
 			boolean isBitfield = node instanceof BitField;
-			boolean isBeyondEnd = offset + field.getLength() > sizeBits / 8;
+			boolean isBeyondEnd = offset + field.getLength() > subClassNode.sizeBits / 8;
 			boolean isZeroLengthStruct = false;
 			if(field instanceof Structure) {
 				Structure structField = (Structure) field;
@@ -331,8 +337,12 @@ public class StdumpAST {
 				}
 			}
 			if(!isBitfield && !isBeyondEnd && !isZeroLengthStruct) {
+				String comment = "";
+				if(isInherited) {
+					comment = "Inherited from " + baseClassNode.name;
+				}
 				try {
-					structure.replaceAtOffset(offset, field, field.getLength(), fieldName, "");
+					structure.replaceAtOffset(offset, field, field.getLength(), fieldName, comment);
 				} catch(IllegalArgumentException e) {
 					importer.log.appendException(e);
 				}
