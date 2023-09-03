@@ -39,6 +39,7 @@ public class StdumpAST {
 	
 	public static class ImporterState {
 		// Options.
+		boolean embedBaseClasses = true;
 		boolean markInlinedCode = false;
 		boolean outputLineNumbers = false;
 
@@ -246,7 +247,7 @@ public class StdumpAST {
 		
 		public DataType createTypeImpl(ImporterState importer) {
 			DataType result = createEmpty(importer);
-			fill(result, importer);
+			fill(result, 0, this, importer);
 			return result;
 		}
 		
@@ -262,20 +263,29 @@ public class StdumpAST {
 			return type;
 		}
 		
-		public void fill(DataType dest, ImporterState importer) {
+		public void fill(DataType dest, int baseOffset, InlineStructOrUnion topLevelNode, ImporterState importer) {
 			if(isStruct) {
 				Structure type = (Structure) dest;
 				for(int i = 0; i < baseClasses.size(); i++) {
-					Node baseClass = baseClasses.get(i);
-					DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
-					addField(type, baseType, baseClass, baseClass.absoluteOffsetBytes, importer);
+					if(importer.embedBaseClasses) {
+						InlineStructOrUnion baseClass = lookupBaseClass(i, importer);
+						if(baseClass == null) {
+							continue;
+						}
+						baseClass.fill(dest, baseClass.absoluteOffsetBytes, topLevelNode, importer);
+					} else {
+						Node baseClass = baseClasses.get(i);
+						DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
+						String baseClassName = "base_class_" + Integer.toString(baseClass.absoluteOffsetBytes);
+						addField(type, baseType, baseClass, baseClass.absoluteOffsetBytes, baseClassName, importer);
+					}
 				}
 				for(Node node : fields) {
 					if(node.storageClass != StorageClass.STATIC) {
 						// Currently we don't try to import bit fields.
 						DataType field = null;
 						if(node.name != null && node.name.equals("__vtable")) {
-							field = new PointerDataType(createVtable(importer));
+							field = new PointerDataType(topLevelNode.createVtable(importer));
 						} else {
 							if(prefix != null) {
 								node.prefix += prefix;
@@ -285,7 +295,7 @@ public class StdumpAST {
 							}
 							field = replaceVoidWithUndefined1(node.createType(importer));
 						}
-						addField(type, field, node, node.relativeOffsetBytes, importer);
+						addField(type, field, node, node.relativeOffsetBytes, node.name, importer);
 					}
 				}
 			} else {
@@ -305,34 +315,7 @@ public class StdumpAST {
 			}
 		}
 		
-		public DataType createVtable(ImporterState importer) {
-			int maxVtableIndex = -1;
-			for(Node node : memberFunctions) {
-				if(node instanceof FunctionType) {
-					FunctionType function = (FunctionType) node;
-					if(function.vtableIndex > maxVtableIndex) {
-						maxVtableIndex = function.vtableIndex;
-					}
-				}
-			}
-			int vtableSize = (maxVtableIndex + 1) * 4;
-			StructureDataType vtable = new StructureDataType(generateName(importer) + "__vtable", vtableSize, importer.programTypeManager);
-			for(Node node : memberFunctions) {
-				if(node instanceof FunctionType) {
-					FunctionType function = (FunctionType) node;
-					if(function.vtableIndex > -1) {
-						try {
-							vtable.replaceAtOffset(function.vtableIndex * 4, PointerDataType.dataType, 4, function.name, "");
-						} catch(IllegalArgumentException e) {
-							importer.log.appendException(e);
-						}
-					}
-				}
-			}
-			return vtable;
-		}
-		
-		public void addField(Structure structure, DataType field, Node node, int offset, ImporterState importer) {
+		public void addField(Structure structure, DataType field, Node node, int offset, String fieldName, ImporterState importer) {
 			boolean isBitfield = node instanceof BitField;
 			boolean isBeyondEnd = offset + field.getLength() > sizeBits / 8;
 			boolean isZeroLengthStruct = false;
@@ -344,10 +327,87 @@ public class StdumpAST {
 			}
 			if(!isBitfield && !isBeyondEnd && !isZeroLengthStruct) {
 				try {
-					structure.replaceAtOffset(offset, field, field.getLength(), node.name, "");
+					structure.replaceAtOffset(offset, field, field.getLength(), fieldName, "");
 				} catch(IllegalArgumentException e) {
 					importer.log.appendException(e);
 				}
+			}
+		}
+		
+		public DataType createVtable(ImporterState importer) {
+			int vtableSize = calculateVtableSize(importer);
+			StructureDataType vtable = new StructureDataType(generateName(importer) + "__vtable", vtableSize, importer.programTypeManager);
+			fillVtable(vtable, importer);
+			return vtable;
+		}
+		
+		public int calculateVtableSize(ImporterState importer) {
+			int maxVtableIndex = -1;
+			for(Node node : memberFunctions) {
+				if(node instanceof FunctionType) {
+					FunctionType function = (FunctionType) node;
+					if(function.vtableIndex > maxVtableIndex) {
+						maxVtableIndex = function.vtableIndex;
+					}
+				}
+			}
+			int vtableSize = (maxVtableIndex + 1) * 4;
+			for(int i = 0; i < baseClasses.size(); i++) {
+				InlineStructOrUnion baseClass = lookupBaseClass(i, importer);
+				if(baseClass == null) {
+					continue;
+				}
+				int baseClassVtableSize = baseClass.calculateVtableSize(importer);
+				if(baseClassVtableSize > vtableSize) {
+					vtableSize = baseClassVtableSize;
+				}
+			}
+			return vtableSize;
+		}
+		
+		public void fillVtable(StructureDataType dest, ImporterState importer) {
+			for(int i = 0; i < baseClasses.size(); i++) {
+				InlineStructOrUnion baseClass = lookupBaseClass(i, importer);
+				if(baseClass == null) {
+					continue;
+				}
+				baseClass.fillVtable(dest, importer);
+			}
+			for(Node node : memberFunctions) {
+				if(node instanceof FunctionType) {
+					FunctionType function = (FunctionType) node;
+					if(function.vtableIndex > -1) {
+						try {
+							dest.replaceAtOffset(function.vtableIndex * 4, PointerDataType.dataType, 4, function.name, "");
+						} catch(IllegalArgumentException e) {
+							importer.log.appendException(e);
+						}
+					}
+				}
+			}
+		}
+		
+		public InlineStructOrUnion lookupBaseClass(int index, ImporterState importer) {
+			Node node = baseClasses.get(index);
+			if(node instanceof TypeName) {
+				TypeName typeName = (TypeName) baseClasses.get(index);
+				Integer baseClassTypeIndex = typeName.lookupTypeIndex(importer);
+				if(baseClassTypeIndex == null) {
+					importer.log.appendMsg("STABS", "Base class lookup failed: " + typeName.typeName);
+					return null;
+				}
+				Node target = importer.ast.deduplicatedTypes.get(baseClassTypeIndex.intValue());
+				if(target instanceof InlineStructOrUnion) {
+					return (InlineStructOrUnion) target;
+				} else {
+					importer.log.appendMsg("STABS", "Base class has invalid referenced type for node " + name);
+					return null;
+				}
+			} else if(node instanceof InlineStructOrUnion) {
+				return (InlineStructOrUnion) node;
+			} else {
+				importer.log.appendMsg("STABS", "Base class node invalid type for node " + name);
+				return null;
 			}
 		}
 	}
@@ -393,20 +453,7 @@ public class StdumpAST {
 			if(typeName.equals("void")) {
 				return VoidDataType.dataType;
 			}
-			Integer index = null;
-			if(referencedFileIndex > -1 && referencedStabsTypeNumber > -1) {
-				// Lookup the type by its STABS type number. This path
-				// ensures that the correct type is found even if multiple
-				// types have the same name.
-				HashMap<Integer, Integer> indexLookup = importer.stabsTypeNumberToDeduplicatedTypeIndex.get(referencedFileIndex);
-				index = indexLookup.get(referencedStabsTypeNumber);
-			}
-			if(index == null) {
-				// For STABS cross references, no type number is provided,
-				// so we must lookup the type by name instead. This is
-				// riskier but I think it's the best we can really do.
-				index = importer.typeNameToDeduplicatedTypeIndex.get(typeName);
-			}
+			Integer index = lookupTypeIndex(importer);
 			if(index == null) {
 				importer.log.appendMsg("STABS", "Type lookup failed: " + typeName);
 				return Undefined1DataType.dataType;
@@ -422,6 +469,24 @@ public class StdumpAST {
 				importer.types.set(index, type);
 			}
 			return type;
+		}
+		
+		public Integer lookupTypeIndex(ImporterState importer) {
+			Integer index = null;
+			if(referencedFileIndex > -1 && referencedStabsTypeNumber > -1) {
+				// Lookup the type by its STABS type number. This path
+				// ensures that the correct type is found even if multiple
+				// types have the same name.
+				HashMap<Integer, Integer> indexLookup = importer.stabsTypeNumberToDeduplicatedTypeIndex.get(referencedFileIndex);
+				index = indexLookup.get(referencedStabsTypeNumber);
+			}
+			if(index == null) {
+				// For STABS cross references, no type number is provided,
+				// so we must lookup the type by name instead. This is
+				// riskier but I think it's the best we can really do.
+				index = importer.typeNameToDeduplicatedTypeIndex.get(typeName);
+			}
+			return index;
 		}
 	}
 	

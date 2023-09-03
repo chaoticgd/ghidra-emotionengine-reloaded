@@ -27,6 +27,10 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 			"For more information see:\n" +
 			"https://github.com/chaoticgd/ccc";
 	
+	public static final String OPTION_EMBED_BASE_CLASSES = "Embed Base Classes";
+	public static final String OPTION_EMBED_BASE_CLASSES_DESC =
+			"Embed fields from base classes in sub classes so that the type of the vtable pointer can be set correctly.";
+	
 	public static final String OPTION_IMPORT_FUNCTIONS = "Import Functions";
 	public static final String OPTION_IMPORT_FUNCTIONS_DESC =
 			"Import functions from the symbol table into Ghidra.";
@@ -86,6 +90,7 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	
 	@Override
 	public void registerOptions(Options options, Program program) {
+		options.registerOption(OPTION_EMBED_BASE_CLASSES, DEFAULT_OPTIONS.embedBaseClasses, null, OPTION_EMBED_BASE_CLASSES_DESC);
 		options.registerOption(OPTION_IMPORT_FUNCTIONS, DEFAULT_OPTIONS.importFunctions, null, OPTION_IMPORT_FUNCTIONS_DESC);
 		options.registerOption(OPTION_IMPORT_GLOBALS, DEFAULT_OPTIONS.importGlobals, null, OPTION_IMPORT_GLOBALS_DESC);
 		options.registerOption(OPTION_INLINED_CODE, DEFAULT_OPTIONS.markInlinedCode, null, OPTION_INLINED_CODE_DESC);
@@ -97,6 +102,7 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	
 	@Override
 	public void optionsChanged(Options options, Program program) {
+		importOptions.embedBaseClasses = options.getBoolean(OPTION_EMBED_BASE_CLASSES, DEFAULT_OPTIONS.embedBaseClasses);
 		importOptions.importFunctions = options.getBoolean(OPTION_IMPORT_FUNCTIONS, DEFAULT_OPTIONS.importFunctions);
 		importOptions.importGlobals = options.getBoolean(OPTION_IMPORT_GLOBALS, DEFAULT_OPTIONS.importGlobals);
 		importOptions.markInlinedCode = options.getBoolean(OPTION_INLINED_CODE, DEFAULT_OPTIONS.markInlinedCode);
