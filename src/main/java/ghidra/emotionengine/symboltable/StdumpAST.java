@@ -277,6 +277,9 @@ public class StdumpAST {
 						Node baseClass = baseClasses.get(i);
 						DataType baseType = replaceVoidWithUndefined1(baseClass.createType(importer));
 						String baseClassName = "base_class_" + Integer.toString(baseClass.absoluteOffsetBytes);
+						if(baseClass instanceof TypeName) {
+							baseClassName += "_" + ((TypeName) baseClass).typeName;
+						}
 						addField(type, baseType, baseClass, baseClass.absoluteOffsetBytes, baseClassName, importer);
 					}
 				}
