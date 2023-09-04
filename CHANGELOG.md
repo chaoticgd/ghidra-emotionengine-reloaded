@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.8
+
+- stabs: Add support for recovering vtables from binaries built with compiler versions where `__vtbl_ptr_type` is 8 bytes instead of 4.
+
 ## v2.1.7
 
 - stabs: Fixed a number of severe issues relating to inheritance, such as base classes being embedded in sub classes at the wrong offset, and types being misnamed.
