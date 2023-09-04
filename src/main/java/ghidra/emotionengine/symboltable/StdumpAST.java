@@ -56,13 +56,15 @@ public class StdumpAST {
 		
 		// Internal state.
 		ImportStage stage; // Used to name types defined inline in global/local variable declarations.
-		ArrayList<DataType> types = new ArrayList<>(); // (data type, size in bytes)
+		ArrayList<DataType> types = new ArrayList<>();
 		ArrayList<HashMap<Integer, Integer>> stabsTypeNumberToDeduplicatedTypeIndex = new ArrayList<>();
 		HashMap<String, Integer> typeNameToDeduplicatedTypeIndex = new HashMap<>();
 		String conflictResolutionPostfix;
 		boolean hadBadTypeLookup = false;
 		HashMap<String, StructureDataType> forwardDeclaredTypes = new HashMap<>();
 		ArrayList<String> prefixStack = new ArrayList<>(); // Used to name nested structs.
+		DataType vtablePointerType;
+		boolean vtablePointerTypeReportError = false;
 		
 		// Ghidra objects.
 		TaskMonitor monitor;
@@ -387,7 +389,7 @@ public class StdumpAST {
 					}
 				}
 			}
-			int vtableSize = (maxVtableIndex + 1) * 4;
+			int vtableSize = (maxVtableIndex + 1) * importer.vtablePointerType.getLength();
 			for(int i = 0; i < baseClasses.size(); i++) {
 				InlineStructOrUnion baseClass = lookupBaseClass(i, importer);
 				if(baseClass == null) {
@@ -413,10 +415,16 @@ public class StdumpAST {
 				if(node instanceof FunctionType) {
 					FunctionType function = (FunctionType) node;
 					if(function.vtableIndex > -1) {
+						int vtablePointerSize = importer.vtablePointerType.getLength();
+						int vtablePointerOffset = function.vtableIndex * vtablePointerSize;
 						try {
-							dest.replaceAtOffset(function.vtableIndex * 4, PointerDataType.dataType, 4, function.name, "");
+							dest.replaceAtOffset(vtablePointerOffset, importer.vtablePointerType, vtablePointerSize, function.name, "");
 						} catch(IllegalArgumentException e) {
 							importer.log.appendException(e);
+						}
+						if(importer.vtablePointerTypeReportError) {
+							importer.log.appendMsg("STABS", "Cannot find type '__vtbl_ptr_type'. Generated C++ vtables may be incorrect.");
+							importer.vtablePointerTypeReportError = false;
 						}
 					}
 				}
