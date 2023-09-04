@@ -64,7 +64,6 @@ public class StdumpAST {
 		HashMap<String, StructureDataType> forwardDeclaredTypes = new HashMap<>();
 		ArrayList<String> prefixStack = new ArrayList<>(); // Used to name nested structs.
 		DataType vtablePointerType;
-		boolean vtablePointerTypeReportError = false;
 		
 		// Ghidra objects.
 		TaskMonitor monitor;
@@ -421,10 +420,6 @@ public class StdumpAST {
 							dest.replaceAtOffset(vtablePointerOffset, importer.vtablePointerType, vtablePointerSize, function.name, "");
 						} catch(IllegalArgumentException e) {
 							importer.log.appendException(e);
-						}
-						if(importer.vtablePointerTypeReportError) {
-							importer.log.appendMsg("STABS", "Cannot find type '__vtbl_ptr_type'. Generated C++ vtables may be incorrect.");
-							importer.vtablePointerTypeReportError = false;
 						}
 					}
 				}
