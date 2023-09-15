@@ -244,13 +244,13 @@ ftf: "w"     is vuftf=3 { export 0:1; }
     { vuACC = _vmulabc(vufs, vuft); }
 :vnop                                             is vuinst & dest      & vuft & vufs        & vuop_0_10=0b01011111111
     { _vnop(); }
-:vopmula."xyz" "ACC", vufs, vuft                  is vuinst & vudest=0b1110 & vuft & vufs    & vuop_0_10=0b01011111110
+:vopmula^dest "ACC", vufs, vuft                   is vuinst & dest      & vuft & vufs        & vuop_0_10=0b01011111110
     { vuACC = _vopmula(vufs, vuft); }
-:vopmsub."xyz" vufd, vufs, vuft                   is vuinst & vudest=0b1110 & vuft & vufs & vufd   & vuop_0_5=0b101110
+:vopmsub^dest vufd, vufs, vuft                    is vuinst & dest      & vuft & vufs & vufd & vuop_0_5=0b101110
     { vufd = _vopmsub(vufs, vuft); }
 :vrget^dest vuft, "R"                             is vuinst & dest      & vuft & vufs        & vuop_0_10=0b10000111101
     { vuft = _vrget(vuft); }
-:vrinit "R", vufs                                 is vuinst & vuftf & vufsf & vuft & vufs     & vuop_0_10=0b10000111110
+:vrinit "R", vufs                                 is vuinst & vuftf & vufsf & vuft & vufs    & vuop_0_10=0b10000111110
     { vuR = _vrinit(vufs); }
 :vrnext^dest vuft, "R"                            is vuinst & dest      & vuft & vufs        & vuop_0_10=0b10000111100
     { vuft = _vrnext(vuR); }
