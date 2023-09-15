@@ -136,7 +136,7 @@ ftf: "w"     is vuftf=3 { export 0:1; }
     { vuACC = _vaddaq(vufs, vuQ); }
 :vadda^bc^dest "ACC", vufs, vuft                  is vuinst & dest          & vuft & vufs          & vuop_2_10=0b000001111 & bc
     { vuACC = _vaddabc(vufs, vuft); }
-:vclip"w.xyz" vufs, vuft                          is vuinst & vudest=0b1110 & vuft & vufs          & vuop_0_10=0b00111111111
+:vclip"w"^dest vufs, vuft                         is vuinst & dest          & vuft & vufs          & vuop_0_10=0b00111111111
     { vuCF = _vclip(vufs, vuft); }
 :vdiv "Q", vufs^fsf, vuft^ftf                     is vuinst & ftf & fsf     & vuft & vufs          & vuop_0_10=0b01110111100
     { vuQ = _vdiv(vufs, fsf, vuft, ftf); }
