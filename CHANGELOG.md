@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.9
+
+- Improve the disassembly of certain VU macro mode instructions.
+
 ## v2.1.8
 
 - stabs: Add support for recovering vtables from binaries built with compiler versions where `__vtbl_ptr_type` is 8 bytes instead of 4.
