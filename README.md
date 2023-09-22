@@ -15,7 +15,6 @@ This extension is based on the original [ghidra-emotionengine](https://github.co
 
 Release builds are available on the [releases](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/releases) page. Unstable builds, generated whenever there is a push to the main branch, are available [here](https://github.com/chaoticgd/ghidra-emotionengine-reloaded/releases/tag/unstable). To install the package, follow the instructions in the [Ghidra documentation](https://ghidra-sre.org/InstallationGuide.html#Extensions).
 
-
 ## Building
 
 If you want to build the extension yourself, install `gradle` and run:
@@ -23,3 +22,17 @@ If you want to build the extension yourself, install `gradle` and run:
 ```
 gradle -PGHIDRA_INSTALL_DIR=/path/to/ghidra buildExtension
 ```
+
+## Common Issues
+
+### 7-Zip returned unsupported method
+
+Modern versions of PCSX2 store save states using zstd compression, which Ghidra's zip implementations doesn't support. To work around this you have to add `SavestateZstdCompression=disabled` to the `EmuCore` section of your `PCSX2_vm.ini`.
+
+### Decompilation fails for some functions
+
+Try disabling the `Decompiler Parameter ID` analyzer.
+
+### Symbols aren't being demangled
+
+Enable the `Use Deprecated Demangler` option in the settings for the `Demangler GNU` analyzer.
