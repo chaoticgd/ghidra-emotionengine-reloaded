@@ -2,7 +2,8 @@
 
 ## v2.1.10
 
-- Added support for the pmultw instruction.
+- Added support for Ghidra 10.4.
+- The pmultw instruction is now correctly disassembled.
 
 ## v2.1.9
 
