@@ -304,96 +304,97 @@ with : prime=28 {
     RD128[64,64] = 0;
 }
 @define row "define pcodeop"
-$(row) _pabsh;    :pabsh RD128, RT128src             is RD128 & RT128src & rs=0x0 & mmiop=0x5 & fct=0x28    { RD128 = _pabsh(RT128src); }
-$(row) _pabsw;    :pabsw RD128, RT128src             is RD128 & RT128src & rs=0x0 & mmiop=0x1 & fct=0x28    { RD128 = _pabsw(RT128src); }
-$(row) _paddb;    :paddb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x8 & fct=0x8   { RD128 = _paddb(RT128src, RS128src); }
-$(row) _paddh;    :paddh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x4 & fct=0x8   { RD128 = _paddh(RT128src, RS128src); }
+$(row) _pabsh;    :pabsh RD128, RT128src             is RD128 & RT128src            & mmiop=0x5  & fct=0x28 { RD128 = _pabsh(RT128src); }
+$(row) _pabsw;    :pabsw RD128, RT128src             is RD128 & RT128src            & mmiop=0x1  & fct=0x28 { RD128 = _pabsw(RT128src); }
+$(row) _paddb;    :paddb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x8  & fct=0x8  { RD128 = _paddb(RT128src, RS128src); }
+$(row) _paddh;    :paddh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x4  & fct=0x8  { RD128 = _paddh(RT128src, RS128src); }
 $(row) _paddsb;   :paddsb RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x18 & fct=0x8  { RD128 = _paddsb(RT128src, RS128src); }
 $(row) _paddsh;   :paddsh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x14 & fct=0x8  { RD128 = _paddsh(RS128src, RT128src); }
 $(row) _paddsw;   :paddsw RD128, RS128src, RT128src  is RD128 & RT128src & RS128src & mmiop=0x10 & fct=0x8  { RD128 = _paddsw(RS128src, RT128src); }
 $(row) _paddub;   :paddub RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x18 & fct=0x28 { RD128 = _paddub(RS128src, RT128src); }
 $(row) _padduh;   :padduh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x14 & fct=0x28 { RD128 = _padduh(RS128src, RT128src); }
 $(row) _padduw;   :padduw RD128, RS128src, RT128src  is RD128 & RT128src & RS128src & mmiop=0x10 & fct=0x28 { RD128 = _padduw(RS128src, RT128src); }
-$(row) _paddw;    :paddw RD128, RS128src, RT128src   is RD128 & RT128src & RS128src & mmiop=0x0 & fct=0x8   { RD128 = _paddw(RS128src, RT128src); }
-$(row) _padsbh;   :padsbh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x4 & fct=0x28  { RD128 = _padsbh(RS128src, RT128src); }
+$(row) _paddw;    :paddw RD128, RS128src, RT128src   is RD128 & RT128src & RS128src & mmiop=0x0  & fct=0x8  { RD128 = _paddw(RS128src, RT128src); }
+$(row) _padsbh;   :padsbh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x4  & fct=0x28 { RD128 = _padsbh(RS128src, RT128src); }
 $(row) _pand;     :pand RD128, RS128src, RT128src    is RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x9  { RD128 = _pand(RS128src, RT128src); }
-$(row) _pceqb;    :pceqb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0xA & fct=0x28  { RD128 = _pceqb(RS128src, RT128src); }
-$(row) _pceqh;    :pceqh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x6 & fct=0x28  { RD128 = _pceqh(RS128src, RT128src); }
-$(row) _pceqw;    :pceqw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x2 & fct=0x28  { RD128 = _pceqw(RS128src, RT128src); }
-$(row) _pcgtb;    :pcgtb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0xa & fct=0x8   { RD128 = _pcgtb(RS128src, RT128src); }
-$(row) _pcgth;    :pcgth RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x6 & fct=0x8   { RD128 = _pcgth(RS128src, RT128src); }
-$(row) _pcgtw;    :pcgtw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x2 & fct=0x8   { RD128 = _pcgtw(RS128src, RT128src); }
-$(row) _pcpyh;    :pcpyh RD128, RT128src             is RD128 & RT128src & rs=0 & mmiop=0x1b & fct=0x29     { RD128 = _pcpyh(RT128src); }
-$(row) _pcpyld;   :pcpyld RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xe & fct=0x9   { RD128 = _pcpyld(RS128src, RT128src); }
-$(row) _pcpyud;   :pcpyud RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xe & fct=0x29  { RD128 = _pcpyud(RS128src, RT128src); }
-$(row) _pdivbw;   :pdivbw RS128src, RT128src         is RS128src & RT128src & rd=0 & mmiop=0x1d & fct=0x9   { _pdivbw(RS128src, RT128src); } # lo, hi)
-$(row) _pdivuw;   :pdivuw RS128src, RT128src         is RS128src & RT128src & rd=0 & mmiop=0xd & fct=0x29   { _pdivuw(RS128src, RT128src); } # (lo, hi)
-$(row) _pdivw;    :pdivw RS128src, RT128src          is RS128src & RT128src & rd=0 & mmiop=0xd & fct=0x9    { _pdivw(RS128src, RT128src); } # (lo, hi)
-$(row) _pexch;    :pexch RD128, RT128src             is RD128 & RT128src & rs=0 & mmiop=0x1a & fct=0x29     { RD128 = _pexch(RT128src); }
-$(row) _pexcw;    :pexcw RD128, RT128src             is RT128src & RD128 & rs=0 & mmiop=0x1e & fct=0x29     { RD128 = _pexcw(RT128src); }
-$(row) _pexeh;    :pexeh RD128, RT128src             is RT128src & RD128 & rs=0 & mmiop=0x1a & fct=0x9      { RD128 = _pexeh(RT128src); }
-$(row) _pexew;    :pexew RD128, RT128src             is RT128src & RD128 & rs=0 & mmiop=0x1e & fct=0x9      { RD128 = _pexew(RT128src); }
-$(row) _pext5;    :pext5 RD128, RT128src             is RT128src & RD128 & rs=0 & mmiop=0x1e & fct=0x8      { RD128 = _pext5(RT128src); }
-$(row) _pextlb;   :pextlb RD128, RSsrc, RTsrc        is RD128 & RSsrc & RTsrc & mmiop=0x1a & fct=0x8        { RD128 = _pextlb(RSsrc, RTsrc); }
-$(row) _pextlh;   :pextlh RD128, RSsrc, RTsrc        is RD128 & RSsrc & RTsrc & mmiop=0x16 & fct=0x8        { RD128 = _pextlh(RSsrc, RTsrc); }
-$(row) _pextlw;   :pextlw RD128, RSsrc, RTsrc        is RD128 & RSsrc & RTsrc & mmiop=0x12 & fct=0x8        { RD128 = _pextlw(RSsrc, RTsrc); }
+$(row) _pceqb;    :pceqb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0xA  & fct=0x28 { RD128 = _pceqb(RS128src, RT128src); }
+$(row) _pceqh;    :pceqh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x6  & fct=0x28 { RD128 = _pceqh(RS128src, RT128src); }
+$(row) _pceqw;    :pceqw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x2  & fct=0x28 { RD128 = _pceqw(RS128src, RT128src); }
+$(row) _pcgtb;    :pcgtb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0xa  & fct=0x8  { RD128 = _pcgtb(RS128src, RT128src); }
+$(row) _pcgth;    :pcgth RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x6  & fct=0x8  { RD128 = _pcgth(RS128src, RT128src); }
+$(row) _pcgtw;    :pcgtw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x2  & fct=0x8  { RD128 = _pcgtw(RS128src, RT128src); }
+$(row) _pcpyh;    :pcpyh RD128, RT128src             is RD128 & RT128src            & mmiop=0x1b & fct=0x29 { RD128 = _pcpyh(RT128src); }
+$(row) _pcpyld;   :pcpyld RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xe  & fct=0x9  { RD128 = _pcpyld(RS128src, RT128src); }
+$(row) _pcpyud;   :pcpyud RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xe  & fct=0x29 { RD128 = _pcpyud(RS128src, RT128src); }
+$(row) _pdivbw;   :pdivbw RS128src, RT128src         is RS128src & RT128src         & mmiop=0x1d & fct=0x9  { _pdivbw(RS128src, RT128src); } # lo, hi)
+$(row) _pdivuw;   :pdivuw RS128src, RT128src         is RS128src & RT128src         & mmiop=0xd  & fct=0x29 { _pdivuw(RS128src, RT128src); } # (lo, hi)
+$(row) _pdivw;    :pdivw RS128src, RT128src          is RS128src & RT128src         & mmiop=0xd  & fct=0x9  { _pdivw(RS128src, RT128src); } # (lo, hi)
+$(row) _pexch;    :pexch RD128, RT128src             is RD128 & RT128src            & mmiop=0x1a & fct=0x29 { RD128 = _pexch(RT128src); }
+$(row) _pexcw;    :pexcw RD128, RT128src             is RT128src & RD128            & mmiop=0x1e & fct=0x29 { RD128 = _pexcw(RT128src); }
+$(row) _pexeh;    :pexeh RD128, RT128src             is RT128src & RD128            & mmiop=0x1a & fct=0x9  { RD128 = _pexeh(RT128src); }
+$(row) _pexew;    :pexew RD128, RT128src             is RT128src & RD128            & mmiop=0x1e & fct=0x9  { RD128 = _pexew(RT128src); }
+$(row) _pext5;    :pext5 RD128, RT128src             is RT128src & RD128            & mmiop=0x1e & fct=0x8  { RD128 = _pext5(RT128src); }
+$(row) _pextlb;   :pextlb RD128, RSsrc, RTsrc        is RD128 & RSsrc & RTsrc       & mmiop=0x1a & fct=0x8  { RD128 = _pextlb(RSsrc, RTsrc); }
+$(row) _pextlh;   :pextlh RD128, RSsrc, RTsrc        is RD128 & RSsrc & RTsrc       & mmiop=0x16 & fct=0x8  { RD128 = _pextlh(RSsrc, RTsrc); }
+$(row) _pextlw;   :pextlw RD128, RSsrc, RTsrc        is RD128 & RSsrc & RTsrc       & mmiop=0x12 & fct=0x8  { RD128 = _pextlw(RSsrc, RTsrc); }
 $(row) _pextub;   :pextub RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x1a & fct=0x28 { RD128 = _pextub(RS128src, RT128src); }
 $(row) _pextuh;   :pextuh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x16 & fct=0x28 { RD128 = _pextuh(RS128src, RT128src); }
 $(row) _pextuw;   :pextuw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x28 { RD128 = _pextuw(RS128src, RT128src); }
 $(row) _phmadh;   :phmadh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x11 & fct=0x9  { RD128 = _phmadh(RS128src, RT128src); } # (lo, hi)
 $(row) _phmsdh;   :phmsdh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x15 & fct=0x9  { RD128 = _phmsdh(RS128src, RT128src); } # (lo, hi)
-$(row) _pinteh;   :pinteh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xA & fct=0x29  { RD128 = _pinteh(RS128src, RT128src); }
-$(row) _pinth;    :pinth RD128, RS128src, RT128src   is RD128 & RT128src & RS128src & mmiop=0xA & fct=0x9   { RD128 = _pinth(RS128src, RT128src); }
+$(row) _pinteh;   :pinteh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xA  & fct=0x29 { RD128 = _pinteh(RS128src, RT128src); }
+$(row) _pinth;    :pinth RD128, RS128src, RT128src   is RD128 & RT128src & RS128src & mmiop=0xA  & fct=0x9  { RD128 = _pinth(RS128src, RT128src); }
 $(row) _pmaddh;   :pmaddh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x10 & fct=0x9  { RD128 = _pmaddh(RS128src, RT128src); } # (lo, hi)
-$(row) _pmadduw;  :pmadduw RD128, RS128src, RT128src is RD128 & RS128src & RT128src & mmiop=0x0 & fct=0x29  { RD128 = _pmadduw(RS128src, RT128src); } # (lo, hi)
-$(row) _pmaddw;   :pmaddw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x0 & fct=0x9   { RD128 = _pmaddw(RS128src, RT128src); } # (lo, hi)
-$(row) _pmaxh;    :pmaxh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x7 & fct=0x8   { RD128 = _pmaxh(RS128src, RT128src); }
-$(row) _pmaxw;    :pmaxw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x3 & fct=0x8   { RD128 = _pmaxw(RS128src, RT128src); }
-$(row) _pmfhi;    :pmfhi RD128                       is RD128 & rs=0 & rt=0 & mmiop=0x8 & fct=0x9           { RD128 = _pmfhi(); } # hi
-$(row) _pmfhllh;  :pmfhl.lh RD128                    is RD128 & rs=0 & rt=0 & mmiop=0x3 & fct=0x30          { RD128 = _pmfhllh(); } # (lo, hi)
-$(row) _pmfhllw;  :pmfhl.lw RD128                    is RD128 & rs=0 & rt=0 & mmiop=0x0 & fct=0x30          { RD128 = _pmfhllw(); } # (lo, hi)
-$(row) _pmfhlsh;  :pmfhl.sh RD128                    is RD128 & rs=0 & rt=0 & mmiop=0x4 & fct=0x30          { RD128 = _pmfhlsh(); } # (lo, hi)
-$(row) _pmfhlslw; :pmfhl.slw RD128                   is RD128 & rs=0 & rt=0 & mmiop=0x2 & fct=0x30          { RD128 = _pmfhlslw(); } # (lo, hi)
-$(row) _pmfhluw;  :pmfhl.uw RD128                    is RD128 & rs=0 & rt=0 & mmiop=0x1 & fct=0x30          { RD128 = _pmfhluw(); } # (lo, hi)
-$(row) _pmflo;    :pmflo RD128                       is RD128 & rs=0 & rt=0 & mmiop=0x9 & fct=0x9           { RD128 = _pmflo(lo_qw); }
-$(row) _pminh;    :pminh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x7 & fct=0x28  { RD128 = _pminh(RS128src, RT128src); }
-$(row) _pminw;    :pminw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x3 & fct=0x28  { RD128 = _pminw(RS128src, RT128src); }
+$(row) _pmadduw;  :pmadduw RD128, RS128src, RT128src is RD128 & RS128src & RT128src & mmiop=0x0  & fct=0x29 { RD128 = _pmadduw(RS128src, RT128src); } # (lo, hi)
+$(row) _pmaddw;   :pmaddw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x0  & fct=0x9  { RD128 = _pmaddw(RS128src, RT128src); } # (lo, hi)
+$(row) _pmaxh;    :pmaxh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x7  & fct=0x8  { RD128 = _pmaxh(RS128src, RT128src); }
+$(row) _pmaxw;    :pmaxw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x3  & fct=0x8  { RD128 = _pmaxw(RS128src, RT128src); }
+$(row) _pmfhi;    :pmfhi RD128                       is RD128                       & mmiop=0x8  & fct=0x9  { RD128 = _pmfhi(); } # hi
+$(row) _pmfhllh;  :pmfhl.lh RD128                    is RD128                       & mmiop=0x3  & fct=0x30 { RD128 = _pmfhllh(); } # (lo, hi)
+$(row) _pmfhllw;  :pmfhl.lw RD128                    is RD128                       & mmiop=0x0  & fct=0x30 { RD128 = _pmfhllw(); } # (lo, hi)
+$(row) _pmfhlsh;  :pmfhl.sh RD128                    is RD128                       & mmiop=0x4  & fct=0x30 { RD128 = _pmfhlsh(); } # (lo, hi)
+$(row) _pmfhlslw; :pmfhl.slw RD128                   is RD128                       & mmiop=0x2  & fct=0x30 { RD128 = _pmfhlslw(); } # (lo, hi)
+$(row) _pmfhluw;  :pmfhl.uw RD128                    is RD128                       & mmiop=0x1  & fct=0x30 { RD128 = _pmfhluw(); } # (lo, hi)
+$(row) _pmflo;    :pmflo RD128                       is RD128                       & mmiop=0x9  & fct=0x9  { RD128 = _pmflo(lo_qw); }
+$(row) _pminh;    :pminh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x7  & fct=0x28 { RD128 = _pminh(RS128src, RT128src); }
+$(row) _pminw;    :pminw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x3  & fct=0x28 { RD128 = _pminw(RS128src, RT128src); }
 $(row) _pmsubh;   :pmsubh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x14 & fct=0x9  { RD128 = _pmsubh(RS128src, RT128src); } # (lo, hi)
-$(row) _pmsubw;   :pmsubw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x4 & fct=0x9   { RD128 = _pmsubw(RS128src, RT128src); } # (lo, hi)
-$(row) _pmthi;    :pmthi RS128src                    is RS128src & rd=0 & rt=0 & mmiop=0x8 & fct=0x29       { hi_qw = _pmthi(RS128src); }
-$(row) _pmthllw;  :pmthl.lw RS128src                 is RS128src & rd=0 & rt=0 & mmiop=0x0 & fct=0x31       { _pmthllw(RS128src); } # (lo, hi)
-$(row) _pmtlo;    :pmtlo RS128src                    is RS128src & rd=0 & rt=0 & mmiop=0x9 & fct=0x29       { _pmtlo(RS128src); } # (lo, hi)
+$(row) _pmsubw;   :pmsubw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x4  & fct=0x9  { RD128 = _pmsubw(RS128src, RT128src); } # (lo, hi)
+$(row) _pmthi;    :pmthi RS128src                    is RS128src                    & mmiop=0x8  & fct=0x29 { hi_qw = _pmthi(RS128src); }
+$(row) _pmthllw;  :pmthl.lw RS128src                 is RS128src                    & mmiop=0x0  & fct=0x31 { _pmthllw(RS128src); } # (lo, hi)
+$(row) _pmtlo;    :pmtlo RS128src                    is RS128src                    & mmiop=0x9  & fct=0x29 { _pmtlo(RS128src); } # (lo, hi)
 $(row) _pmulth;   :pmulth RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x1c & fct=0x9  { RD128 = _pmulth(RS128src, RT128src); } # (lo, hi)
-$(row) _pmultuw;  :pmultuw RD128, RS128src, RT128src is RD128 & RS128src & RT128src & mmiop=0xc & fct=0x29  { RD128 = _pmultuw(RS128src, RT128src); } # (lo, hi)
+$(row) _pmultuw;  :pmultuw RD128, RS128src, RT128src is RD128 & RS128src & RT128src & mmiop=0xc  & fct=0x29 { RD128 = _pmultuw(RS128src, RT128src); } # (lo, hi)
+$(row) _pmultw;   :pmultw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xc  & fct=0x9  { RD128 = _pmultw(RS128src, RT128src); } # (lo, hi)
 $(row) _pnor;     :pnor RD128, RS128src, RT128src    is RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x29 { RD128 = _pnor(RS128src, RT128src); }
 $(row) _por;      :por RD128, RS128src, RT128src     is RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x29 { RD128 = _por(RS128src, RT128src); }
-$(row) _ppac5;    :ppac5 RD128, RT128src             is RD128 & RT128src & rs=0 & mmiop=0x1f & fct=0x8      { RD128 = _ppac5(RT128src); }
+$(row) _ppac5;    :ppac5 RD128, RT128src             is RD128 & RT128src            & mmiop=0x1f & fct=0x8  { RD128 = _ppac5(RT128src); }
 $(row) _ppacb;    :ppacb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x1b & fct=0x8  { RD128 = _ppacb(RS128src, RT128src); }
 $(row) _ppach;    :ppach RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x17 & fct=0x8  { RD128 = _ppach(RS128src, RT128src); }
 $(row) _ppacw;    :ppacw RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x8  { RD128 = _ppacw(RS128src, RT128src); }
-$(row) _prevh;    :prevh RD128, RT128src             is RD128 & RT128src & rs=0 & mmiop=0x1b & fct=0x9      { RD128 = _prevh(RT128src); }
-$(row) _prot3w;   :prot3w RD128, RT128src            is RD128 & RT128src & rs=0 & mmiop=0x1f & fct=0x9      { RD128 = _prot3w(RT128src); }
-$(row) _psllh;    :psllh RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x34             { RD128 = _psllh(RT128src, sa:8); }
-$(row) _psllvw;   :psllvw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x2 & fct=0x9   { RD128 = _psllvw(RS128src, RT128src); }
-$(row) _psllw;    :psllw RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x3c             { RD128 = _psllw(RT128src, sa:8); }
-$(row) _psrah;    :psrah RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x37             { RD128 = _psrah(RT128src, sa:8); }
-$(row) _psravw;   :psravw RD128, RT128src, RS128src  is RD128 & RT128src & RS128src & mmiop=0x3 & fct=0x29  { RD128 = _psravw(RT128src, RS128src); }
-$(row) _psraw;    :psraw RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x3f             { RD128 = _psraw(RT128src, sa:8); }
-$(row) _psrlh;    :psrlh RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x36             { RD128 = _psrlh(RT128src, sa:8); }
-$(row) _psrlvw;   :psrlvw RD128, RT128src, RS128src  is RD128 & RT128src & RS128src & mmiop=0x3 & fct=0x9   { RD128 = _psrlvw(RT128src, RS128src); }
-$(row) _psrlw;    :psrlw RD128, RT128src, sa         is RD128 & RT128src & rs=0 & sa & fct=0x3e             { RD128 = _psrlw(RT128src, sa:8); }
-$(row) _psubb;    :psubb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x9 & fct=8     { RD128 = _psubb(RS128src, RT128src); }
+$(row) _prevh;    :prevh RD128, RT128src             is RD128 & RT128src            & mmiop=0x1b & fct=0x9  { RD128 = _prevh(RT128src); }
+$(row) _prot3w;   :prot3w RD128, RT128src            is RD128 & RT128src            & mmiop=0x1f & fct=0x9  { RD128 = _prot3w(RT128src); }
+$(row) _psllh;    :psllh RD128, RT128src, sa         is RD128 & RT128src            & sa         & fct=0x34 { RD128 = _psllh(RT128src, sa:8); }
+$(row) _psllvw;   :psllvw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x2  & fct=0x9  { RD128 = _psllvw(RS128src, RT128src); }
+$(row) _psllw;    :psllw RD128, RT128src, sa         is RD128 & RT128src            & sa         & fct=0x3c { RD128 = _psllw(RT128src, sa:8); }
+$(row) _psrah;    :psrah RD128, RT128src, sa         is RD128 & RT128src            & sa         & fct=0x37 { RD128 = _psrah(RT128src, sa:8); }
+$(row) _psravw;   :psravw RD128, RT128src, RS128src  is RD128 & RT128src & RS128src & mmiop=0x3  & fct=0x29 { RD128 = _psravw(RT128src, RS128src); }
+$(row) _psraw;    :psraw RD128, RT128src, sa         is RD128 & RT128src            & sa         & fct=0x3f { RD128 = _psraw(RT128src, sa:8); }
+$(row) _psrlh;    :psrlh RD128, RT128src, sa         is RD128 & RT128src            & sa         & fct=0x36 { RD128 = _psrlh(RT128src, sa:8); }
+$(row) _psrlvw;   :psrlvw RD128, RT128src, RS128src  is RD128 & RT128src & RS128src & mmiop=0x3  & fct=0x9  { RD128 = _psrlvw(RT128src, RS128src); }
+$(row) _psrlw;    :psrlw RD128, RT128src, sa         is RD128 & RT128src            & sa         & fct=0x3e { RD128 = _psrlw(RT128src, sa:8); }
+$(row) _psubb;    :psubb RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x9  & fct=8    { RD128 = _psubb(RS128src, RT128src); }
 $(row) _psubub;   :psubub RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x19 & fct=0x28 { RD128 = _psubub(RS128src, RT128src); }
 $(row) _psubsb;   :psubsb RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x19 & fct=0x8  { RD128 = _psubsb(RS128src, RT128src); }
-$(row) _psubh;    :psubh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x5 & fct=0x8   { RD128 = _psubh(RS128src, RT128src); }
+$(row) _psubh;    :psubh RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x5  & fct=0x8  { RD128 = _psubh(RS128src, RT128src); }
 $(row) _psubuh;   :psubuh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x15 & fct=0x28 { RD128 = _psubuh(RS128src, RT128src); }
 $(row) _psubsh;   :psubsh RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x15 & fct=0x8  { RD128 = _psubsh(RS128src, RT128src); }
-$(row) _psubw;    :psubw RD128, RS128src, RT128src   is RD128 & RT128src & RS128src & mmiop=0x1 & fct=0x8   { RD128 = _psubw(RS128src, RT128src); }
+$(row) _psubw;    :psubw RD128, RS128src, RT128src   is RD128 & RT128src & RS128src & mmiop=0x1  & fct=0x8  { RD128 = _psubw(RS128src, RT128src); }
 $(row) _psubuw;   :psubuw RD128, RS128src, RT128src  is RD128 & RT128src & RS128src & mmiop=0x11 & fct=0x28 { RD128 = _psubuw(RS128src, RT128src); }
 $(row) _psubsw;   :psubsw RD128, RS128src, RT128src  is RD128 & RT128src & RS128src & mmiop=0x11 & fct=0x8  { RD128 = _psubsw(RS128src, RT128src); }
 $(row) _pxor;     :pxor RD128, RS128src, RT128src    is RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x9  { RD128 = _pxor(RS128src, RT128src); }
 $(row) _qfsrv;    :qfsrv RD128, RS128src, RT128src   is RD128 & RS128src & RT128src & mmiop=0x1B & fct=0x28 { RD128 = _qfsrv(RS128src, RT128src); }
-$(row) _plzcw;    :plzcw RD, RSsrc                   is RD & RSsrc & rt=0 & mmiop=0 & fct=0x4 { RD = _plzcw(RSsrc); }
+$(row) _plzcw;    :plzcw RD, RSsrc                   is RD & RSsrc                  & mmiop=0    & fct=0x4  { RD = _plzcw(RSsrc); }
 @undef row
 
 }
