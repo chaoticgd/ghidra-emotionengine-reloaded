@@ -365,6 +365,7 @@ $(row) _pmthllw;  :pmthl.lw RS128src                 is RS128src                
 $(row) _pmtlo;    :pmtlo RS128src                    is RS128src                    & mmiop=0x9  & fct=0x29 { _pmtlo(RS128src); } # (lo, hi)
 $(row) _pmulth;   :pmulth RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0x1c & fct=0x9  { RD128 = _pmulth(RS128src, RT128src); } # (lo, hi)
 $(row) _pmultuw;  :pmultuw RD128, RS128src, RT128src is RD128 & RS128src & RT128src & mmiop=0xc  & fct=0x29 { RD128 = _pmultuw(RS128src, RT128src); } # (lo, hi)
+$(row) _pmultw;   :pmultw RD128, RS128src, RT128src  is RD128 & RS128src & RT128src & mmiop=0xc  & fct=0x9  { RD128 = _pmultw(RS128src, RT128src); } # (lo, hi)
 $(row) _pnor;     :pnor RD128, RS128src, RT128src    is RD128 & RS128src & RT128src & mmiop=0x13 & fct=0x29 { RD128 = _pnor(RS128src, RT128src); }
 $(row) _por;      :por RD128, RS128src, RT128src     is RD128 & RS128src & RT128src & mmiop=0x12 & fct=0x29 { RD128 = _por(RS128src, RT128src); }
 $(row) _ppac5;    :ppac5 RD128, RT128src             is RD128 & RT128src            & mmiop=0x1f & fct=0x8  { RD128 = _ppac5(RT128src); }
