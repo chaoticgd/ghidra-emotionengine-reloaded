@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.10
+
+- Added support for the pmultw instruction.
+
 ## v2.1.9
 
 - Improve the disassembly of certain VU macro mode instructions.
