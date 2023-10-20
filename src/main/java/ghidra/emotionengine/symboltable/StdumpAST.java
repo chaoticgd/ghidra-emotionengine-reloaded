@@ -18,6 +18,7 @@ import ghidra.program.model.data.PointerDataType;
 import ghidra.program.model.data.ShortDataType;
 import ghidra.program.model.data.Structure;
 import ghidra.program.model.data.StructureDataType;
+import ghidra.program.model.data.TypedefDataType;
 import ghidra.program.model.data.Undefined1DataType;
 import ghidra.program.model.data.Undefined4DataType;
 import ghidra.program.model.data.Union;
@@ -48,6 +49,8 @@ public class StdumpAST {
 	public static class ImporterState {
 		// Options.
 		boolean embedBaseClasses = true;
+		boolean eraseBuiltins = false;
+		boolean eraseTypedefs = false;
 		boolean markInlinedCode = false;
 		boolean outputLineNumbers = false;
 
@@ -121,6 +124,11 @@ public class StdumpAST {
 		public DataType createTypeImpl(ImporterState importer) {
 			importer.log.appendMsg("STABS", "createTypeImpl() called on a node that isn't a type.");
 			return Undefined1DataType.dataType;
+		}
+		
+		public DataType createTypedef(ImporterState importer) {
+			DataType createdType = new TypedefDataType(name, createType(importer));
+			return importer.programTypeManager.addDataType(createdType, null);
 		}
 		
 		void setupConflictResolutionPostfix(ImporterState importer) {

@@ -28,9 +28,6 @@ import ghidra.program.model.data.DataTypeManager;
 import ghidra.program.model.data.DataUtilities;
 import ghidra.program.model.data.DataUtilities.ClearDataMode;
 import ghidra.program.model.data.PointerDataType;
-import ghidra.program.model.data.ShortDataType;
-import ghidra.program.model.data.StructureDataType;
-import ghidra.program.model.data.TypedefDataType;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.LocalVariable;
 import ghidra.program.model.listing.LocalVariableImpl;
@@ -49,6 +46,8 @@ public class StabsImporter extends FlatProgramAPI {
 
 	public static class ImportOptions {
 		boolean embedBaseClasses = true;
+		boolean eraseBuiltins = false;
+		boolean eraseTypedefs = false;
 		boolean importFunctions = true;
 		boolean importGlobals = true;
 		boolean markInlinedCode = true;
@@ -171,6 +170,8 @@ public class StabsImporter extends FlatProgramAPI {
 		// Now actually import all this data into Ghidra.
 		StdumpAST.ImporterState importer = new StdumpAST.ImporterState();
 		importer.embedBaseClasses = options.embedBaseClasses;
+		importer.eraseBuiltins = options.eraseBuiltins;
+		importer.eraseTypedefs = options.eraseTypedefs;
 		importer.markInlinedCode = options.markInlinedCode;
 		importer.outputLineNumbers = options.outputLineNumbers;
 		importer.ast = ast;
@@ -272,15 +273,23 @@ public class StabsImporter extends FlatProgramAPI {
 		for(int i = 0; i < type_count; i++) {
 			StdumpAST.Node node = importer.ast.deduplicatedTypes.get(i);
 			boolean isTypeDef = node.storageClass == StorageClass.TYPEDEF;
-			boolean isEnum = node instanceof StdumpAST.InlineEnum;
-			boolean isStructOrUnion = node instanceof StdumpAST.InlineStructOrUnion;
-			if(isTypeDef && !isEnum && !isStructOrUnion) {
-				DataType createdType = new TypedefDataType(node.name, node.createType(importer));
-				DataType addedType = importer.programTypeManager.addDataType(createdType, null);
-				importer.typedefs.add(addedType);
-			} else {
-				importer.typedefs.add(null);
+			if(isTypeDef) {
+				boolean isBuiltIn = node instanceof StdumpAST.BuiltIn;
+				if(isBuiltIn) {
+					if(!importer.eraseBuiltins) {
+						importer.typedefs.add(node.createTypedef(importer));
+						continue;
+					}
+				} else {
+					boolean isEnum = node instanceof StdumpAST.InlineEnum;
+					boolean isStructOrUnion = node instanceof StdumpAST.InlineStructOrUnion;
+					if(!importer.eraseTypedefs && !isEnum && !isStructOrUnion) {
+						importer.typedefs.add(node.createTypedef(importer));
+						continue;
+					}
+				}
 			}
+			importer.typedefs.add(null);
 		}
 		
 		// Fill in the structs and unions recursively.
