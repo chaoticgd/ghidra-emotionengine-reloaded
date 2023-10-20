@@ -48,8 +48,8 @@ public class StdumpParser {
 				result.files.add(context.deserialize(fileNode, StdumpAST.Node.class));
 			}
 			JsonArray deduplicatedTypes = object.get("deduplicated_types").getAsJsonArray();
-			for(JsonElement type_node : deduplicatedTypes) {
-				result.deduplicatedTypes.add(context.deserialize(type_node, StdumpAST.Node.class));
+			for(JsonElement typeNode : deduplicatedTypes) {
+				result.deduplicatedTypes.add(context.deserialize(typeNode, StdumpAST.Node.class));
 			}
 			return result;
 		}
@@ -64,17 +64,17 @@ public class StdumpParser {
 			StdumpAST.Node node;
 			if(descriptor.equals("array")) {
 				StdumpAST.Array array = new StdumpAST.Array();
-				array.element_type = context.deserialize(object.get("element_type"), StdumpAST.Node.class);
-				array.element_count = object.get("element_count").getAsInt();
+				array.elementType = context.deserialize(object.get("element_type"), StdumpAST.Node.class);
+				array.elementCount = object.get("element_count").getAsInt();
 				node = array;
 			} else if(descriptor.equals("bitfield")) {
 				StdumpAST.BitField bitfield = new StdumpAST.BitField();
-				bitfield.underlying_type = context.deserialize(object.get("underlying_type"), StdumpAST.Node.class);
+				bitfield.underlyingType = context.deserialize(object.get("underlying_type"), StdumpAST.Node.class);
 				node = bitfield;
 			} else if(descriptor.equals("builtin")) {
 				StdumpAST.BuiltIn builtin = new StdumpAST.BuiltIn();
-				String builtin_class = object.get("class").getAsString();
-				builtin.builtin_class = readBuiltInClass(builtin, builtin_class);
+				String builtinClass = object.get("class").getAsString();
+				builtin.builtinClass = readBuiltInClass(builtin, builtinClass);
 				node = builtin;
 			} else if(descriptor.equals("function_definition")) {
 				StdumpAST.FunctionDefinition function = new StdumpAST.FunctionDefinition();
@@ -104,42 +104,42 @@ public class StdumpParser {
 				}
 				node = function;
 			} else if(descriptor.equals("function_type")) {
-				StdumpAST.FunctionType function_type = new StdumpAST.FunctionType();
+				StdumpAST.FunctionType functionType = new StdumpAST.FunctionType();
 				if(object.has("return_type")) {
-					function_type.returnType = context.deserialize(object.get("return_type"), StdumpAST.Node.class);
+					functionType.returnType = context.deserialize(object.get("return_type"), StdumpAST.Node.class);
 				}
 				if(object.has("parameters")) {
 					for(JsonElement parameter : object.get("parameters").getAsJsonArray()) {
-						function_type.parameters.add(context.deserialize(parameter, StdumpAST.Node.class));
+						functionType.parameters.add(context.deserialize(parameter, StdumpAST.Node.class));
 					}
 				}
-				function_type.vtableIndex = object.get("vtable_index").getAsInt();
-				node = function_type;
+				functionType.vtableIndex = object.get("vtable_index").getAsInt();
+				node = functionType;
 			} else if(descriptor.equals("enum")) {
-				StdumpAST.InlineEnum inline_enum = new StdumpAST.InlineEnum();
+				StdumpAST.InlineEnum inlineEnum = new StdumpAST.InlineEnum();
 				for(JsonElement src : object.get("constants").getAsJsonArray()) {
 					StdumpAST.EnumConstant dest = new StdumpAST.EnumConstant();
 					JsonObject src_object = src.getAsJsonObject();
 					dest.value = src_object.get("value").getAsInt();
 					dest.name = src_object.get("name").getAsString();
-					inline_enum.constants.add(dest);
+					inlineEnum.constants.add(dest);
 				}
-				node = inline_enum;
+				node = inlineEnum;
 			} else if(descriptor.equals("struct") || descriptor.equals("union")) {
-				StdumpAST.InlineStructOrUnion struct_or_union = new StdumpAST.InlineStructOrUnion();
-				struct_or_union.isStruct = descriptor.equals("struct");
-				if(struct_or_union.isStruct) {
-					for(JsonElement base_class : object.get("base_classes").getAsJsonArray()) {
-						struct_or_union.baseClasses.add(context.deserialize(base_class, StdumpAST.Node.class));
+				StdumpAST.InlineStructOrUnion structOrUnion = new StdumpAST.InlineStructOrUnion();
+				structOrUnion.isStruct = descriptor.equals("struct");
+				if(structOrUnion.isStruct) {
+					for(JsonElement baseClass : object.get("base_classes").getAsJsonArray()) {
+						structOrUnion.baseClasses.add(context.deserialize(baseClass, StdumpAST.Node.class));
 					}
 				}
 				for(JsonElement field : object.get("fields").getAsJsonArray()) {
-					struct_or_union.fields.add(context.deserialize(field, StdumpAST.Node.class));
+					structOrUnion.fields.add(context.deserialize(field, StdumpAST.Node.class));
 				}
-				for(JsonElement member_function : object.get("member_functions").getAsJsonArray()) {
-					struct_or_union.memberFunctions.add(context.deserialize(member_function, StdumpAST.Node.class));
+				for(JsonElement memberFunction : object.get("member_functions").getAsJsonArray()) {
+					structOrUnion.memberFunctions.add(context.deserialize(memberFunction, StdumpAST.Node.class));
 				}
-				node = struct_or_union;
+				node = structOrUnion;
 			} else if(descriptor.equals("pointer")) {
 				StdumpAST.Pointer pointer = new StdumpAST.Pointer();
 				pointer.valueType = context.deserialize(object.get("value_type"), StdumpAST.Node.class);
@@ -151,47 +151,47 @@ public class StdumpParser {
 				reference.valueType = context.deserialize(object.get("value_type"), StdumpAST.Node.class);
 				node = reference;
 			} else if(descriptor.equals("source_file")) {
-				StdumpAST.SourceFile source_file = new StdumpAST.SourceFile();
-				source_file.path = object.get("path").getAsString();
-				source_file.relativePath = object.get("relative_path").getAsString();
-				source_file.textAddress = object.get("text_address").getAsInt();
-				for(JsonElement type_object : object.get("types").getAsJsonArray()) {
-					source_file.types.add(context.deserialize(type_object, StdumpAST.Node.class));
+				StdumpAST.SourceFile sourceFile = new StdumpAST.SourceFile();
+				sourceFile.path = object.get("path").getAsString();
+				sourceFile.relativePath = object.get("relative_path").getAsString();
+				sourceFile.textAddress = object.get("text_address").getAsInt();
+				for(JsonElement typeObject : object.get("types").getAsJsonArray()) {
+					sourceFile.types.add(context.deserialize(typeObject, StdumpAST.Node.class));
 				}
-				for(JsonElement function_object : object.get("functions").getAsJsonArray()) {
-					source_file.functions.add(context.deserialize(function_object, StdumpAST.Node.class));
+				for(JsonElement functionObject : object.get("functions").getAsJsonArray()) {
+					sourceFile.functions.add(context.deserialize(functionObject, StdumpAST.Node.class));
 				}
-				for(JsonElement global_object : object.get("globals").getAsJsonArray()) {
-					source_file.globals.add(context.deserialize(global_object, StdumpAST.Node.class));
+				for(JsonElement globalObject : object.get("globals").getAsJsonArray()) {
+					sourceFile.globals.add(context.deserialize(globalObject, StdumpAST.Node.class));
 				}
-				JsonElement stabs_type_number_to_deduplicated_type_index = object.get("stabs_type_number_to_deduplicated_type_index");
-				for(Map.Entry<String, JsonElement> entry : stabs_type_number_to_deduplicated_type_index.getAsJsonObject().entrySet()) {
-					int stabs_type_number = Integer.parseInt(entry.getKey());
-					int type_index = entry.getValue().getAsInt();
-					source_file.stabsTypeNumberToDeduplicatedTypeIndex.put(stabs_type_number, type_index);
+				JsonElement stabsTypeNumberToDeduplicatedTypeIndex = object.get("stabs_type_number_to_deduplicated_type_index");
+				for(Map.Entry<String, JsonElement> entry : stabsTypeNumberToDeduplicatedTypeIndex.getAsJsonObject().entrySet()) {
+					int stabsTypeNumber = Integer.parseInt(entry.getKey());
+					int typeIndex = entry.getValue().getAsInt();
+					sourceFile.stabsTypeNumberToDeduplicatedTypeIndex.put(stabsTypeNumber, typeIndex);
 				}
-				node = source_file;
+				node = sourceFile;
 			} else if(descriptor.equals("type_name")) {
-				StdumpAST.TypeName type_name = new StdumpAST.TypeName();
-				type_name.typeName = object.get("type_name").getAsString();
+				StdumpAST.TypeName typeName = new StdumpAST.TypeName();
+				typeName.typeName = object.get("type_name").getAsString();
 				if(object.has("referenced_file_index")) {
-					type_name.referencedFileIndex = object.get("referenced_file_index").getAsInt();
+					typeName.referencedFileIndex = object.get("referenced_file_index").getAsInt();
 				}
 				if(object.has("referenced_stabs_type_number")) {
-					type_name.referencedStabsTypeNumber = object.get("referenced_stabs_type_number").getAsInt();
+					typeName.referencedStabsTypeNumber = object.get("referenced_stabs_type_number").getAsInt();
 				}
-				node = type_name;
+				node = typeName;
 			} else if(descriptor.equals("variable")) {
 				StdumpAST.Variable variable = new StdumpAST.Variable();
-				String variable_class = object.get("class").getAsString();
-				if(variable_class.equals("global")) {
-					variable.variable_class = StdumpAST.VariableClass.GLOBAL;
-				} else if(variable_class.equals("local")) {
-					variable.variable_class = StdumpAST.VariableClass.LOCAL;
-				} else if(variable_class.equals("parameter")) {
-					variable.variable_class = StdumpAST.VariableClass.PARAMETER;
+				String variableClass = object.get("class").getAsString();
+				if(variableClass.equals("global")) {
+					variable.variableClass = StdumpAST.VariableClass.GLOBAL;
+				} else if(variableClass.equals("local")) {
+					variable.variableClass = StdumpAST.VariableClass.LOCAL;
+				} else if(variableClass.equals("parameter")) {
+					variable.variableClass = StdumpAST.VariableClass.PARAMETER;
 				} else {
-					throw new JsonParseException("Bad variable class: " + variable_class);
+					throw new JsonParseException("Bad variable class: " + variableClass);
 				}
 				variable.storage = readVariableStorage(object.get("storage").getAsJsonObject());
 				if(object.has("block_low")) {
@@ -214,16 +214,16 @@ public class StdumpParser {
 				dest.name = src.get("name").getAsString();
 			}
 			if(src.has("storage_class")) {
-				String storage_class = src.get("storage_class").getAsString();
-				if(storage_class.equals("typedef")) {
+				String storageClass = src.get("storage_class").getAsString();
+				if(storageClass.equals("typedef")) {
 					dest.storageClass = StdumpAST.StorageClass.TYPEDEF;
-				} else if(storage_class.equals("extern")) {
+				} else if(storageClass.equals("extern")) {
 					dest.storageClass = StdumpAST.StorageClass.EXTERN;
-				} else if(storage_class.equals("static")) {
+				} else if(storageClass.equals("static")) {
 					dest.storageClass = StdumpAST.StorageClass.STATIC;
-				} else if(storage_class.equals("auto")) {
+				} else if(storageClass.equals("auto")) {
 					dest.storageClass = StdumpAST.StorageClass.AUTO;
-				} else if(storage_class.equals("register")) {
+				} else if(storageClass.equals("register")) {
 					dest.storageClass = StdumpAST.StorageClass.REGISTER;
 				}
 			}
@@ -250,24 +250,24 @@ public class StdumpParser {
 			}
 		}
 		
-		private StdumpAST.BuiltInClass readBuiltInClass(StdumpAST.BuiltIn builtin, String builtin_class) throws JsonParseException {
-			if(builtin_class.equals("void")) { return StdumpAST.BuiltInClass.VOID; }
-			else if(builtin_class.equals("8-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_8; }
-			else if(builtin_class.equals("8-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_8; }
-			else if(builtin_class.equals("8-bit integer")) { return StdumpAST.BuiltInClass.UNQUALIFIED_8; }
-			else if(builtin_class.equals("8-bit boolean")) { return StdumpAST.BuiltInClass.BOOL_8; }
-			else if(builtin_class.equals("16-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_16; }
-			else if(builtin_class.equals("16-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_16; }
-			else if(builtin_class.equals("32-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_32; }
-			else if(builtin_class.equals("32-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_32; }
-			else if(builtin_class.equals("32-bit floating point")) { return StdumpAST.BuiltInClass.FLOAT_32; }
-			else if(builtin_class.equals("64-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_64; }
-			else if(builtin_class.equals("64-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_64; }
-			else if(builtin_class.equals("64-bit floating point")) { return StdumpAST.BuiltInClass.FLOAT_64; }
-			else if(builtin_class.equals("128-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_128; }
-			else if(builtin_class.equals("128-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_128; }
-			else if(builtin_class.equals("128-bit integer")) { return StdumpAST.BuiltInClass.UNQUALIFIED_128; }
-			else if(builtin_class.equals("128-bit floating point")) { return StdumpAST.BuiltInClass.FLOAT_128; }
+		private StdumpAST.BuiltInClass readBuiltInClass(StdumpAST.BuiltIn builtin, String builtinClass) throws JsonParseException {
+			if(builtinClass.equals("void")) { return StdumpAST.BuiltInClass.VOID; }
+			else if(builtinClass.equals("8-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_8; }
+			else if(builtinClass.equals("8-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_8; }
+			else if(builtinClass.equals("8-bit integer")) { return StdumpAST.BuiltInClass.UNQUALIFIED_8; }
+			else if(builtinClass.equals("8-bit boolean")) { return StdumpAST.BuiltInClass.BOOL_8; }
+			else if(builtinClass.equals("16-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_16; }
+			else if(builtinClass.equals("16-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_16; }
+			else if(builtinClass.equals("32-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_32; }
+			else if(builtinClass.equals("32-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_32; }
+			else if(builtinClass.equals("32-bit floating point")) { return StdumpAST.BuiltInClass.FLOAT_32; }
+			else if(builtinClass.equals("64-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_64; }
+			else if(builtinClass.equals("64-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_64; }
+			else if(builtinClass.equals("64-bit floating point")) { return StdumpAST.BuiltInClass.FLOAT_64; }
+			else if(builtinClass.equals("128-bit unsigned integer")) { return StdumpAST.BuiltInClass.UNSIGNED_128; }
+			else if(builtinClass.equals("128-bit signed integer")) { return StdumpAST.BuiltInClass.SIGNED_128; }
+			else if(builtinClass.equals("128-bit integer")) { return StdumpAST.BuiltInClass.UNQUALIFIED_128; }
+			else if(builtinClass.equals("128-bit floating point")) { return StdumpAST.BuiltInClass.FLOAT_128; }
 			else { throw new JsonParseException("Bad builtin class."); }
 		}
 		
@@ -276,7 +276,7 @@ public class StdumpParser {
 			String type = src.get("type").getAsString();
 			if(type.equals("global")) {
 				dest.type = StdumpAST.VariableStorageType.GLOBAL;
-				dest.global_address = src.get("global_address").getAsInt();
+				dest.globalAddress = src.get("global_address").getAsInt();
 			} else if(type.equals("register")) {
 				dest.type = StdumpAST.VariableStorageType.REGISTER;
 				dest.register = src.get("register").getAsString();

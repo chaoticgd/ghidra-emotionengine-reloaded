@@ -493,8 +493,8 @@ public class StabsImporter extends FlatProgramAPI {
 			StdumpAST.SourceFile file = (StdumpAST.SourceFile) importer.ast.files.get(i);
 			for(StdumpAST.Node global_node : file.globals) {
 				StdumpAST.Variable global = (StdumpAST.Variable) global_node;
-				if(global.storage.global_address > -1) {
-					Address address = space.getAddress(global.storage.global_address);
+				if(global.storage.globalAddress > -1) {
+					Address address = space.getAddress(global.storage.globalAddress);
 					DataType type = StdumpAST.replaceVoidWithUndefined1(global.type.createType(importer));
 					try {
 						DataUtilities.createData(currentProgram, address, type, type.getLength(), false, ClearDataMode.CLEAR_ALL_CONFLICT_DATA);

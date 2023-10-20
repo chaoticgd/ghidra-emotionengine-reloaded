@@ -166,20 +166,20 @@ public class StdumpAST {
 	}
 	
 	public static class Array extends Node {
-		Node element_type;
-		int element_count;
+		Node elementType;
+		int elementCount;
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			DataType element = replaceVoidWithUndefined1(element_type.createType(importer));
-			return new ArrayDataType(element, element_count, element.getLength());
+			DataType element = replaceVoidWithUndefined1(elementType.createType(importer));
+			return new ArrayDataType(element, elementCount, element.getLength());
 		}
 	}
 	
 	public static class BitField extends Node {
-		Node underlying_type;
+		Node underlyingType;
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			return underlying_type.createType(importer);
+			return underlyingType.createType(importer);
 		}
 	}
 	
@@ -194,10 +194,10 @@ public class StdumpAST {
 	}
 	
 	public static class BuiltIn extends Node {
-		BuiltInClass builtin_class;
+		BuiltInClass builtinClass;
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			switch(builtin_class) {
+			switch(builtinClass) {
 			case VOID:
 				return VoidDataType.dataType;
 			case UNSIGNED_8:
@@ -583,7 +583,7 @@ public class StdumpAST {
 	
 	public static class VariableStorage {
 		VariableStorageType type;
-		int global_address = -1;
+		int globalAddress = -1;
 		String register;
 		String registerClass;
 		int dbxRegisterNumber = -1;
@@ -593,7 +593,7 @@ public class StdumpAST {
 	}
 	
 	public static class Variable extends Node {
-		VariableClass variable_class;
+		VariableClass variableClass;
 		VariableStorage storage;
 		int blockLow = -1;
 		int blockHigh = -1;
