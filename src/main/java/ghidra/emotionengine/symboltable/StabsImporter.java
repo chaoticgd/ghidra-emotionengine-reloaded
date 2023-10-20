@@ -16,6 +16,7 @@ import ghidra.app.cmd.function.CreateFunctionCmd;
 import ghidra.app.util.exporter.ExporterException;
 import ghidra.app.util.exporter.OriginalFileExporter;
 import ghidra.app.util.importer.MessageLog;
+import ghidra.emotionengine.symboltable.StdumpAST.StorageClass;
 import ghidra.framework.Application;
 import ghidra.framework.Platform;
 import ghidra.program.flatapi.FlatProgramAPI;
@@ -29,6 +30,7 @@ import ghidra.program.model.data.DataUtilities.ClearDataMode;
 import ghidra.program.model.data.PointerDataType;
 import ghidra.program.model.data.ShortDataType;
 import ghidra.program.model.data.StructureDataType;
+import ghidra.program.model.data.TypedefDataType;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.LocalVariable;
 import ghidra.program.model.listing.LocalVariableImpl;
@@ -255,7 +257,6 @@ public class StabsImporter extends FlatProgramAPI {
 					importer.vtablePointerType = addedType;
 				}
 				importer.types.add(addedType);
-				
 			} else {
 				importer.types.add(null);
 			}
@@ -265,6 +266,21 @@ public class StabsImporter extends FlatProgramAPI {
 		// If __vtbl_ptr_type isn't a struct, we assume it's a pointer.
 		if(importer.vtablePointerType == null) {
 			importer.vtablePointerType = PointerDataType.dataType;
+		}
+		
+		// Create and register typedefs.
+		for(int i = 0; i < type_count; i++) {
+			StdumpAST.Node node = importer.ast.deduplicatedTypes.get(i);
+			boolean isTypeDef = node.storageClass == StorageClass.TYPEDEF;
+			boolean isEnum = node instanceof StdumpAST.InlineEnum;
+			boolean isStructOrUnion = node instanceof StdumpAST.InlineStructOrUnion;
+			if(isTypeDef && !isEnum && !isStructOrUnion) {
+				DataType createdType = new TypedefDataType(node.name, node.createType(importer));
+				DataType addedType = importer.programTypeManager.addDataType(createdType, null);
+				importer.typedefs.add(addedType);
+			} else {
+				importer.typedefs.add(null);
+			}
 		}
 		
 		// Fill in the structs and unions recursively.

@@ -64,6 +64,7 @@ public class StdumpAST {
 		HashMap<String, StructureDataType> forwardDeclaredTypes = new HashMap<>();
 		ArrayList<String> prefixStack = new ArrayList<>(); // Used to name nested structs.
 		DataType vtablePointerType;
+		ArrayList<DataType> typedefs = new ArrayList<>();
 		
 		// Ghidra objects.
 		TaskMonitor monitor;
@@ -110,6 +111,10 @@ public class StdumpAST {
 			isInCreateTypeCall = true;
 			DataType type = createTypeImpl(importer);
 			isInCreateTypeCall = false;
+			if(type == null) {
+				importer.log.appendMsg("STABS", "createTypeImpl() returned null: " + name);
+				return Undefined1DataType.dataType;
+			}
 			return type;
 		}
 		
@@ -494,10 +499,23 @@ public class StdumpAST {
 			}
 			Integer index = lookupTypeIndex(importer);
 			if(index == null) {
+				// If we cannot lookup the type, assume it's a type that's only
+				// forward declared in a translation unit with symbols, but is
+				// not defined in one.
 				return createForwardDeclaredType(importer);
+			}
+			// If there's a typedef, use that. This code may be called before
+			// the typedefs list is populated, so check the index against the
+			// size of the list.
+			if(index < importer.typedefs.size()) {
+				DataType typedef = importer.typedefs.get(index);
+				if(typedef != null) {
+					return typedef;
+				}
 			}
 			DataType type = importer.types.get(index);
 			if(type == null) {
+				// Create the type if it hasn't already been processed.
 				Node node = importer.ast.deduplicatedTypes.get(index);
 				if(node instanceof InlineStructOrUnion) {
 					importer.log.appendMsg("STABS", "Bad type name referencing struct or union: " + typeName);
