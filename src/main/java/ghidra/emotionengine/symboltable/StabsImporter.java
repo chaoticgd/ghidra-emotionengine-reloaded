@@ -571,12 +571,12 @@ public class StabsImporter extends FlatProgramAPI {
 			// If we're trying to make a typedef to built-in with the same name
 			// as said built-in, just use the built-in itself instead so we
 			// don't create a ".conflict" type.
-			if(addedDataType instanceof TypedefDataType && existingDataType instanceof BuiltInDataType) {
-				TypedefDataType typedef = (TypedefDataType) addedDataType;
-				if(typedef.getBaseDataType().isEquivalent(existingDataType)) {
-					return ConflictResult.USE_EXISTING;
-				}
+			boolean typedefAndBuiltIn = addedDataType instanceof TypedefDataType && existingDataType instanceof BuiltInDataType;
+			boolean sizesEqual = addedDataType.getLength() == existingDataType.getLength();
+			if(typedefAndBuiltIn && sizesEqual) {
+				return ConflictResult.USE_EXISTING;
 			}
+			
 			return ConflictResult.RENAME_AND_ADD;
 		}
 
