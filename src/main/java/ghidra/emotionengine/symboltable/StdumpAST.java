@@ -48,8 +48,6 @@ public class StdumpAST {
 	public static class ImporterState {
 		// Options.
 		boolean embedBaseClasses = true;
-		boolean eraseBuiltins = false;
-		boolean eraseTypedefs = false;
 		boolean markInlinedCode = false;
 		boolean outputLineNumbers = false;
 

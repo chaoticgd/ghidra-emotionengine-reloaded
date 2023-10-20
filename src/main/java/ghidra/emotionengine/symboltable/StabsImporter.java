@@ -50,10 +50,10 @@ public class StabsImporter extends FlatProgramAPI {
 
 	public static class ImportOptions {
 		boolean embedBaseClasses = true;
-		boolean eraseBuiltins = false;
-		boolean eraseTypedefs = false;
+		boolean importBuiltins = true;
 		boolean importFunctions = true;
 		boolean importGlobals = true;
+		boolean importTypedefs = true;
 		boolean markInlinedCode = true;
 		boolean outputLineNumbers = true;
 		boolean onlyRunOnce = true;
@@ -174,8 +174,6 @@ public class StabsImporter extends FlatProgramAPI {
 		// Now actually import all this data into Ghidra.
 		StdumpAST.ImporterState importer = new StdumpAST.ImporterState();
 		importer.embedBaseClasses = options.embedBaseClasses;
-		importer.eraseBuiltins = options.eraseBuiltins;
-		importer.eraseTypedefs = options.eraseTypedefs;
 		importer.markInlinedCode = options.markInlinedCode;
 		importer.outputLineNumbers = options.outputLineNumbers;
 		importer.ast = ast;
@@ -280,14 +278,14 @@ public class StabsImporter extends FlatProgramAPI {
 			if(isTypeDef) {
 				boolean isBuiltIn = node instanceof StdumpAST.BuiltIn;
 				if(isBuiltIn) {
-					if(!importer.eraseBuiltins) {
+					if(options.importBuiltins) {
 						importer.typedefs.add(createTypedef(node, importer));
 						continue;
 					}
 				} else {
 					boolean isEnum = node instanceof StdumpAST.InlineEnum;
 					boolean isStructOrUnion = node instanceof StdumpAST.InlineStructOrUnion;
-					if(!importer.eraseTypedefs && !isEnum && !isStructOrUnion) {
+					if(options.importTypedefs && !isEnum && !isStructOrUnion) {
 						importer.typedefs.add(createTypedef(node, importer));
 						continue;
 					}
