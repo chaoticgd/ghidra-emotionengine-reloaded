@@ -18,7 +18,6 @@ import ghidra.program.model.data.PointerDataType;
 import ghidra.program.model.data.ShortDataType;
 import ghidra.program.model.data.Structure;
 import ghidra.program.model.data.StructureDataType;
-import ghidra.program.model.data.TypedefDataType;
 import ghidra.program.model.data.Undefined1DataType;
 import ghidra.program.model.data.Undefined4DataType;
 import ghidra.program.model.data.Union;
@@ -59,6 +58,8 @@ public class StdumpAST {
 		
 		// Internal state.
 		ImportStage stage; // Used to name types defined inline in global/local variable declarations.
+		String currentFuncOrGlobalName; // Used to name anonymous inline types.
+		String currentVariableName; // Also used to name anonymous inline types.
 		ArrayList<DataType> types = new ArrayList<>();
 		ArrayList<HashMap<Integer, Integer>> stabsTypeNumberToDeduplicatedTypeIndex = new ArrayList<>();
 		HashMap<String, Integer> typeNameToDeduplicatedTypeIndex = new HashMap<>();
@@ -126,11 +127,6 @@ public class StdumpAST {
 			return Undefined1DataType.dataType;
 		}
 		
-		public DataType createTypedef(ImporterState importer) {
-			DataType createdType = new TypedefDataType(name, createType(importer));
-			return importer.programTypeManager.addDataType(createdType, null);
-		}
-		
 		void setupConflictResolutionPostfix(ImporterState importer) {
 			if(conflict) {
 				importer.conflictResolutionPostfix = "__" + Integer.toString(firstFile) + "_" + Integer.toString(stabsTypeNumber);
@@ -151,15 +147,16 @@ public class StdumpAST {
 				}
 			}
 			if(name == null || name.isEmpty()) {
-				String dummyName = "unnamed_";
 				switch(importer.stage) {
-					case TYPES: dummyName = "unnamed_"; break;
-					case RETURN_TYPE: dummyName = "anonymousreturntype_"; break;
-					case PARAMETERS: dummyName = "anonymousparametertype_"; break;
-					case LOCAL_VARIABLES: dummyName = "anonymouslocaltype_"; break;
-					case GLOBAL_VARIABLES: dummyName = "anonymousglobaltype_"; break;
+					case TYPES: {
+						String fullPostfix = Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
+						return prefixString + "unnamed_" + fullPostfix;
+					}
+					case RETURN_TYPE: return importer.currentFuncOrGlobalName + "__anonymousreturntype";
+					case PARAMETERS: return importer.currentFuncOrGlobalName + "__anonymousparameter__" + importer.currentVariableName;
+					case LOCAL_VARIABLES: return importer.currentFuncOrGlobalName + "__anonymouslocal__" + importer.currentVariableName;
+					case GLOBAL_VARIABLES:  return importer.currentFuncOrGlobalName + "__anonymousglobal";
 				}
-				return prefixString + dummyName + Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
 			}
 			return prefixString + name + importer.conflictResolutionPostfix;
 		}
