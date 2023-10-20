@@ -30,8 +30,10 @@ import ghidra.program.model.data.DataTypeConflictHandler;
 import ghidra.program.model.data.DataTypeManager;
 import ghidra.program.model.data.DataUtilities;
 import ghidra.program.model.data.DataUtilities.ClearDataMode;
+import ghidra.program.model.data.Integer16DataType;
 import ghidra.program.model.data.PointerDataType;
 import ghidra.program.model.data.TypedefDataType;
+import ghidra.program.model.data.UnsignedInteger16DataType;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.LocalVariable;
 import ghidra.program.model.listing.LocalVariableImpl;
@@ -323,7 +325,14 @@ public class StabsImporter extends FlatProgramAPI {
 	}
 	
 	public DataType createTypedef(StdumpAST.Node node, ImporterState importer) {
-		DataType createdType = new TypedefDataType(node.name, node.createType(importer));
+		DataType underlyingType = node.createType(importer);
+		// The type names provided for 128 bit built-in data types in the symbol
+		// table are a bit dodgy and conflict with each other, so here we make
+		// sure we don't create typedefs for them.
+		if(underlyingType instanceof Integer16DataType || underlyingType instanceof UnsignedInteger16DataType) {
+			return null;
+		}
+		DataType createdType = new TypedefDataType(node.name, underlyingType);
 		return importer.programTypeManager.addDataType(createdType, STABS_DATA_TYPE_CONFLICT_HANDLER);
 	}
 	
