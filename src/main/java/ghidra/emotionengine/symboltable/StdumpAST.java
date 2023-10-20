@@ -56,6 +56,8 @@ public class StdumpAST {
 		
 		// Internal state.
 		ImportStage stage; // Used to name types defined inline in global/local variable declarations.
+		String currentFuncOrGlobalName; // Used to name anonymous inline types.
+		String currentVariableName; // Also used to name anonymous inline types.
 		ArrayList<DataType> types = new ArrayList<>();
 		ArrayList<HashMap<Integer, Integer>> stabsTypeNumberToDeduplicatedTypeIndex = new ArrayList<>();
 		HashMap<String, Integer> typeNameToDeduplicatedTypeIndex = new HashMap<>();
@@ -64,6 +66,7 @@ public class StdumpAST {
 		HashMap<String, StructureDataType> forwardDeclaredTypes = new HashMap<>();
 		ArrayList<String> prefixStack = new ArrayList<>(); // Used to name nested structs.
 		DataType vtablePointerType;
+		ArrayList<DataType> typedefs = new ArrayList<>();
 		
 		// Ghidra objects.
 		TaskMonitor monitor;
@@ -110,6 +113,10 @@ public class StdumpAST {
 			isInCreateTypeCall = true;
 			DataType type = createTypeImpl(importer);
 			isInCreateTypeCall = false;
+			if(type == null) {
+				importer.log.appendMsg("STABS", "createTypeImpl() returned null: " + name);
+				return Undefined1DataType.dataType;
+			}
 			return type;
 		}
 		
@@ -138,35 +145,36 @@ public class StdumpAST {
 				}
 			}
 			if(name == null || name.isEmpty()) {
-				String dummyName = "unnamed_";
 				switch(importer.stage) {
-					case TYPES: dummyName = "unnamed_"; break;
-					case RETURN_TYPE: dummyName = "anonymousreturntype_"; break;
-					case PARAMETERS: dummyName = "anonymousparametertype_"; break;
-					case LOCAL_VARIABLES: dummyName = "anonymouslocaltype_"; break;
-					case GLOBAL_VARIABLES: dummyName = "anonymousglobaltype_"; break;
+					case TYPES: {
+						String fullPostfix = Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
+						return prefixString + "unnamed_" + fullPostfix;
+					}
+					case RETURN_TYPE: return importer.currentFuncOrGlobalName + "__anonymousreturntype";
+					case PARAMETERS: return importer.currentFuncOrGlobalName + "__anonymousparameter__" + importer.currentVariableName;
+					case LOCAL_VARIABLES: return importer.currentFuncOrGlobalName + "__anonymouslocal__" + importer.currentVariableName;
+					case GLOBAL_VARIABLES:  return importer.currentFuncOrGlobalName + "__anonymousglobal";
 				}
-				return prefixString + dummyName + Integer.toString(absoluteOffsetBytes) + importer.conflictResolutionPostfix;
 			}
 			return prefixString + name + importer.conflictResolutionPostfix;
 		}
 	}
 	
 	public static class Array extends Node {
-		Node element_type;
-		int element_count;
+		Node elementType;
+		int elementCount;
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			DataType element = replaceVoidWithUndefined1(element_type.createType(importer));
-			return new ArrayDataType(element, element_count, element.getLength());
+			DataType element = replaceVoidWithUndefined1(elementType.createType(importer));
+			return new ArrayDataType(element, elementCount, element.getLength());
 		}
 	}
 	
 	public static class BitField extends Node {
-		Node underlying_type;
+		Node underlyingType;
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			return underlying_type.createType(importer);
+			return underlyingType.createType(importer);
 		}
 	}
 	
@@ -181,10 +189,10 @@ public class StdumpAST {
 	}
 	
 	public static class BuiltIn extends Node {
-		BuiltInClass builtin_class;
+		BuiltInClass builtinClass;
 		
 		public DataType createTypeImpl(ImporterState importer) {
-			switch(builtin_class) {
+			switch(builtinClass) {
 			case VOID:
 				return VoidDataType.dataType;
 			case UNSIGNED_8:
@@ -328,7 +336,11 @@ public class StdumpAST {
 							importer.prefixStack.remove(importer.prefixStack.size() - 1);
 						}
 						boolean isInherited = baseClassNode != subClassNode;
-						addField(type, field, node, baseOffset + node.relativeOffsetBytes, node.name, isInherited, baseClassNode, subClassNode, importer);
+						try {
+							addField(type, field, node, baseOffset + node.relativeOffsetBytes, node.name, isInherited, baseClassNode, subClassNode, importer);
+						} catch(IllegalArgumentException e) {
+							importer.log.appendException(e);
+						}
 					}
 				}
 			} else {
@@ -341,7 +353,11 @@ public class StdumpAST {
 						importer.prefixStack.add(baseClassNode.name);
 						DataType field = replaceVoidWithUndefined1(node.createType(importer));
 						importer.prefixStack.remove(importer.prefixStack.size() - 1);
-						type.add(field, field.getLength(), node.name, "");
+						try {
+							type.add(field, field.getLength(), node.name, "");
+						} catch(IllegalArgumentException e) {
+							importer.log.appendException(e);
+						}
 					}
 				}
 			}
@@ -494,10 +510,23 @@ public class StdumpAST {
 			}
 			Integer index = lookupTypeIndex(importer);
 			if(index == null) {
+				// If we cannot lookup the type, assume it's a type that's only
+				// forward declared in a translation unit with symbols, but is
+				// not defined in one.
 				return createForwardDeclaredType(importer);
+			}
+			// If there's a typedef, use that. This code may be called before
+			// the typedefs list is populated, so check the index against the
+			// size of the list.
+			if(index < importer.typedefs.size()) {
+				DataType typedef = importer.typedefs.get(index);
+				if(typedef != null) {
+					return typedef;
+				}
 			}
 			DataType type = importer.types.get(index);
 			if(type == null) {
+				// Create the type if it hasn't already been processed.
 				Node node = importer.ast.deduplicatedTypes.get(index);
 				if(node instanceof InlineStructOrUnion) {
 					importer.log.appendMsg("STABS", "Bad type name referencing struct or union: " + typeName);
@@ -557,7 +586,7 @@ public class StdumpAST {
 	
 	public static class VariableStorage {
 		VariableStorageType type;
-		int global_address = -1;
+		int globalAddress = -1;
 		String register;
 		String registerClass;
 		int dbxRegisterNumber = -1;
@@ -567,7 +596,7 @@ public class StdumpAST {
 	}
 	
 	public static class Variable extends Node {
-		VariableClass variable_class;
+		VariableClass variableClass;
 		VariableStorage storage;
 		int blockLow = -1;
 		int blockHigh = -1;
@@ -575,7 +604,7 @@ public class StdumpAST {
 	}
 	
 	public static DataType replaceVoidWithUndefined1(DataType type) {
-		if(type.isEquivalent(VoidDataType.dataType)) {
+		if(VoidDataType.isVoidDataType(type)) {
 			return Undefined1DataType.dataType;
 		}
 		return type;

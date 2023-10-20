@@ -16,19 +16,22 @@ import ghidra.app.cmd.function.CreateFunctionCmd;
 import ghidra.app.util.exporter.ExporterException;
 import ghidra.app.util.exporter.OriginalFileExporter;
 import ghidra.app.util.importer.MessageLog;
+import ghidra.emotionengine.symboltable.StdumpAST.ImporterState;
+import ghidra.emotionengine.symboltable.StdumpAST.StorageClass;
 import ghidra.framework.Application;
 import ghidra.framework.Platform;
 import ghidra.program.flatapi.FlatProgramAPI;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSet;
 import ghidra.program.model.address.AddressSpace;
+import ghidra.program.model.data.BuiltInDataType;
 import ghidra.program.model.data.DataType;
+import ghidra.program.model.data.DataTypeConflictHandler;
 import ghidra.program.model.data.DataTypeManager;
 import ghidra.program.model.data.DataUtilities;
 import ghidra.program.model.data.DataUtilities.ClearDataMode;
 import ghidra.program.model.data.PointerDataType;
-import ghidra.program.model.data.ShortDataType;
-import ghidra.program.model.data.StructureDataType;
+import ghidra.program.model.data.TypedefDataType;
 import ghidra.program.model.listing.Function;
 import ghidra.program.model.listing.LocalVariable;
 import ghidra.program.model.listing.LocalVariableImpl;
@@ -47,8 +50,10 @@ public class StabsImporter extends FlatProgramAPI {
 
 	public static class ImportOptions {
 		boolean embedBaseClasses = true;
+		boolean importBuiltins = true;
 		boolean importFunctions = true;
 		boolean importGlobals = true;
+		boolean importTypedefs = true;
 		boolean markInlinedCode = true;
 		boolean outputLineNumbers = true;
 		boolean onlyRunOnce = true;
@@ -242,7 +247,7 @@ public class StabsImporter extends FlatProgramAPI {
 			if(node instanceof StdumpAST.InlineEnum) {
 				StdumpAST.InlineEnum inlineEnum = (StdumpAST.InlineEnum) node;
 				DataType type = inlineEnum.createType(importer);
-				importer.types.add(importer.programTypeManager.addDataType(type, null));
+				importer.types.add(importer.programTypeManager.addDataType(type, STABS_DATA_TYPE_CONFLICT_HANDLER));
 			} else if(node instanceof StdumpAST.InlineStructOrUnion) {
 				StdumpAST.InlineStructOrUnion structOrUnion = (StdumpAST.InlineStructOrUnion) node;
 				boolean isVtablePointerType = structOrUnion.name.equals("__vtbl_ptr_type");
@@ -250,12 +255,11 @@ public class StabsImporter extends FlatProgramAPI {
 					fixVtablePointerType(structOrUnion);
 				}
 				DataType createdType = structOrUnion.createEmpty(importer);
-				DataType addedType = importer.programTypeManager.addDataType(createdType, null);
+				DataType addedType = importer.programTypeManager.addDataType(createdType, STABS_DATA_TYPE_CONFLICT_HANDLER);
 				if(isVtablePointerType) {
 					importer.vtablePointerType = addedType;
 				}
 				importer.types.add(addedType);
-				
 			} else {
 				importer.types.add(null);
 			}
@@ -265,6 +269,29 @@ public class StabsImporter extends FlatProgramAPI {
 		// If __vtbl_ptr_type isn't a struct, we assume it's a pointer.
 		if(importer.vtablePointerType == null) {
 			importer.vtablePointerType = PointerDataType.dataType;
+		}
+		
+		// Create and register typedefs.
+		for(int i = 0; i < type_count; i++) {
+			StdumpAST.Node node = importer.ast.deduplicatedTypes.get(i);
+			boolean isTypeDef = node.storageClass == StorageClass.TYPEDEF;
+			if(isTypeDef) {
+				boolean isBuiltIn = node instanceof StdumpAST.BuiltIn;
+				if(isBuiltIn) {
+					if(options.importBuiltins) {
+						importer.typedefs.add(createTypedef(node, importer));
+						continue;
+					}
+				} else {
+					boolean isEnum = node instanceof StdumpAST.InlineEnum;
+					boolean isStructOrUnion = node instanceof StdumpAST.InlineStructOrUnion;
+					if(options.importTypedefs && !isEnum && !isStructOrUnion) {
+						importer.typedefs.add(createTypedef(node, importer));
+						continue;
+					}
+				}
+			}
+			importer.typedefs.add(null);
 		}
 		
 		// Fill in the structs and unions recursively.
@@ -295,6 +322,11 @@ public class StabsImporter extends FlatProgramAPI {
 		}
 	}
 	
+	public DataType createTypedef(StdumpAST.Node node, ImporterState importer) {
+		DataType createdType = new TypedefDataType(node.name, node.createType(importer));
+		return importer.programTypeManager.addDataType(createdType, STABS_DATA_TYPE_CONFLICT_HANDLER);
+	}
+	
 	public void importFunctions(StdumpAST.ImporterState importer, Program program) {
 		monitor.setMessage("STABS - Importing functions...");
 		monitor.setMaximum(importer.ast.files.size());
@@ -315,6 +347,7 @@ public class StabsImporter extends FlatProgramAPI {
 					Function function = findOrCreateFunction(def, low, high, range);
 					setFunctionName(function, def);
 					function.setComment(sourceFile.path);
+					importer.currentFuncOrGlobalName = def.name;
 					if(type.returnType != null) {
 						try {
 							importer.stage = StdumpAST.ImportStage.RETURN_TYPE;
@@ -391,6 +424,7 @@ public class StabsImporter extends FlatProgramAPI {
 			ArrayList<Variable> parameters = new ArrayList<>();
 			for(int i = 0; i < type.parameters.size(); i++) {
 				StdumpAST.Variable variable = (StdumpAST.Variable) type.parameters.get(i);
+				importer.currentVariableName = variable.name;
 				DataType parameterType = StdumpAST.replaceVoidWithUndefined1(variable.type.createType(importer));
 				if(variable.storage.isByReference) {
 					parameterType = new PointerDataType(parameterType);
@@ -445,6 +479,7 @@ public class StabsImporter extends FlatProgramAPI {
 		}
 		for(Map.Entry<String, StdumpAST.Variable> local : stackLocals.entrySet()) {
 			StdumpAST.Variable var = local.getValue();
+			importer.currentVariableName = var.name;
 			DataType localType = StdumpAST.replaceVoidWithUndefined1(var.type.createType(importer));
 			LocalVariable dest;
 			try {
@@ -468,9 +503,10 @@ public class StabsImporter extends FlatProgramAPI {
 			StdumpAST.SourceFile file = (StdumpAST.SourceFile) importer.ast.files.get(i);
 			for(StdumpAST.Node global_node : file.globals) {
 				StdumpAST.Variable global = (StdumpAST.Variable) global_node;
-				if(global.storage.global_address > -1) {
-					Address address = space.getAddress(global.storage.global_address);
+				if(global.storage.globalAddress > -1) {
+					importer.currentFuncOrGlobalName = global.name;
 					DataType type = StdumpAST.replaceVoidWithUndefined1(global.type.createType(importer));
+					Address address = space.getAddress(global.storage.globalAddress);
 					try {
 						DataUtilities.createData(currentProgram, address, type, type.getLength(), false, ClearDataMode.CLEAR_ALL_CONFLICT_DATA);
 					} catch (CodeUnitInsertionException e) {
@@ -528,5 +564,30 @@ public class StabsImporter extends FlatProgramAPI {
 		}
 		return output.toString();
 	}
+	
+	public final static DataTypeConflictHandler STABS_DATA_TYPE_CONFLICT_HANDLER = new DataTypeConflictHandler() {
+		@Override
+		public ConflictResult resolveConflict(DataType addedDataType, DataType existingDataType) {
+			// If we're trying to make a typedef to built-in with the same name
+			// as said built-in, just use the built-in itself instead so we
+			// don't create a ".conflict" type.
+			boolean typedefAndBuiltIn = addedDataType instanceof TypedefDataType && existingDataType instanceof BuiltInDataType;
+			boolean sizesEqual = addedDataType.getLength() == existingDataType.getLength();
+			if(typedefAndBuiltIn && sizesEqual) {
+				return ConflictResult.USE_EXISTING;
+			}
+			
+			return ConflictResult.RENAME_AND_ADD;
+		}
 
+		@Override
+		public boolean shouldUpdate(DataType sourceDataType, DataType localDataType) {
+			return true;
+		}
+
+		@Override
+		public DataTypeConflictHandler getSubsequentHandler() {
+			return DataTypeConflictHandler.DEFAULT_HANDLER;
+		}
+	};
 }

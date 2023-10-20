@@ -31,6 +31,10 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	public static final String OPTION_EMBED_BASE_CLASSES_DESC =
 			"Embed fields from base classes in sub classes so that the type of the vtable pointer can be set correctly.";
 	
+	public static final String OPTION_IMPORT_BUILTINS = "Import Built-in Types";
+	public static final String OPTION_IMPORT_BUILTINS_DESC =
+			"Create typedefs for built-in types instead of using their Ghidra equivalents (e.g. use 'unsigned char' instead of 'uchar').";
+	
 	public static final String OPTION_IMPORT_FUNCTIONS = "Import Functions";
 	public static final String OPTION_IMPORT_FUNCTIONS_DESC =
 			"Import functions from the symbol table into Ghidra.";
@@ -38,6 +42,10 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	public static final String OPTION_IMPORT_GLOBALS = "Import Global Variables";
 	public static final String OPTION_IMPORT_GLOBALS_DESC =
 			"Import global variables from the STABS symbols into Ghidra.";
+	
+	public static final String OPTION_IMPORT_TYPEDEFS = "Import Typedefs";
+	public static final String OPTION_IMPORT_TYPEDEFS_DESC =
+			"Import typedefs instead of using their underlying types.";
 	
 	public static final String OPTION_INLINED_CODE = "Mark Inlined Code";
 	public static final String OPTION_INLINED_CODE_DESC =
@@ -53,7 +61,7 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	
 	public static final String OPTION_OVERRIDE_ELF_PATH = "Override ELF Path (Optional)";
 	public static final String OPTION_OVERRIDE_ELF_PATH_DESC =
-			"Use and ELF file of your choice as input to stdump instead of the currently loaded program.";
+			"Use an ELF file of your choice as input to stdump instead of the currently loaded program.";
 	
 	public static final String OPTION_OVERRIDE_JSON_PATH = "Override JSON Path (Optional)";
 	public static final String OPTION_OVERRIDE_JSON_PATH_DESC =
@@ -91,8 +99,10 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	@Override
 	public void registerOptions(Options options, Program program) {
 		options.registerOption(OPTION_EMBED_BASE_CLASSES, DEFAULT_OPTIONS.embedBaseClasses, null, OPTION_EMBED_BASE_CLASSES_DESC);
+		options.registerOption(OPTION_IMPORT_BUILTINS, DEFAULT_OPTIONS.importBuiltins, null, OPTION_IMPORT_BUILTINS_DESC);
 		options.registerOption(OPTION_IMPORT_FUNCTIONS, DEFAULT_OPTIONS.importFunctions, null, OPTION_IMPORT_FUNCTIONS_DESC);
 		options.registerOption(OPTION_IMPORT_GLOBALS, DEFAULT_OPTIONS.importGlobals, null, OPTION_IMPORT_GLOBALS_DESC);
+		options.registerOption(OPTION_IMPORT_TYPEDEFS, DEFAULT_OPTIONS.importTypedefs, null, OPTION_IMPORT_TYPEDEFS_DESC);
 		options.registerOption(OPTION_INLINED_CODE, DEFAULT_OPTIONS.markInlinedCode, null, OPTION_INLINED_CODE_DESC);
 		options.registerOption(OPTION_LINE_NUMBERS, DEFAULT_OPTIONS.outputLineNumbers, null, OPTION_LINE_NUMBERS_DESC);
 		options.registerOption(OPTION_ONLY_RUN_ONCE, DEFAULT_OPTIONS.onlyRunOnce, null, OPTION_ONLY_RUN_ONCE_DESC);
@@ -103,8 +113,10 @@ public class StabsAnalyzer extends AbstractAnalyzer {
 	@Override
 	public void optionsChanged(Options options, Program program) {
 		importOptions.embedBaseClasses = options.getBoolean(OPTION_EMBED_BASE_CLASSES, DEFAULT_OPTIONS.embedBaseClasses);
+		importOptions.importBuiltins = options.getBoolean(OPTION_IMPORT_BUILTINS, DEFAULT_OPTIONS.importBuiltins);
 		importOptions.importFunctions = options.getBoolean(OPTION_IMPORT_FUNCTIONS, DEFAULT_OPTIONS.importFunctions);
 		importOptions.importGlobals = options.getBoolean(OPTION_IMPORT_GLOBALS, DEFAULT_OPTIONS.importGlobals);
+		importOptions.importTypedefs = options.getBoolean(OPTION_IMPORT_TYPEDEFS, DEFAULT_OPTIONS.importTypedefs);
 		importOptions.markInlinedCode = options.getBoolean(OPTION_INLINED_CODE, DEFAULT_OPTIONS.markInlinedCode);
 		importOptions.outputLineNumbers = options.getBoolean(OPTION_LINE_NUMBERS, DEFAULT_OPTIONS.outputLineNumbers);
 		importOptions.onlyRunOnce = options.getBoolean(OPTION_ONLY_RUN_ONCE, DEFAULT_OPTIONS.onlyRunOnce);

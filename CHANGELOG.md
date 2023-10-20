@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.11
+
+- stabs: Built-ins and typedefs are now imported and used instead of their underlying type.
+- stabs: Anonymous return types, parameter types, local variable types and global variable types are now given more useful names.
+
 ## v2.1.10
 
 - Added support for Ghidra 10.4.
