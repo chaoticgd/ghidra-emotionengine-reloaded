@@ -336,7 +336,11 @@ public class StdumpAST {
 							importer.prefixStack.remove(importer.prefixStack.size() - 1);
 						}
 						boolean isInherited = baseClassNode != subClassNode;
-						addField(type, field, node, baseOffset + node.relativeOffsetBytes, node.name, isInherited, baseClassNode, subClassNode, importer);
+						try {
+							addField(type, field, node, baseOffset + node.relativeOffsetBytes, node.name, isInherited, baseClassNode, subClassNode, importer);
+						} catch(IllegalArgumentException e) {
+							importer.log.appendException(e);
+						}
 					}
 				}
 			} else {
@@ -349,7 +353,11 @@ public class StdumpAST {
 						importer.prefixStack.add(baseClassNode.name);
 						DataType field = replaceVoidWithUndefined1(node.createType(importer));
 						importer.prefixStack.remove(importer.prefixStack.size() - 1);
-						type.add(field, field.getLength(), node.name, "");
+						try {
+							type.add(field, field.getLength(), node.name, "");
+						} catch(IllegalArgumentException e) {
+							importer.log.appendException(e);
+						}
 					}
 				}
 			}
@@ -596,7 +604,7 @@ public class StdumpAST {
 	}
 	
 	public static DataType replaceVoidWithUndefined1(DataType type) {
-		if(type.isEquivalent(VoidDataType.dataType)) {
+		if(VoidDataType.isVoidDataType(type)) {
 			return Undefined1DataType.dataType;
 		}
 		return type;
