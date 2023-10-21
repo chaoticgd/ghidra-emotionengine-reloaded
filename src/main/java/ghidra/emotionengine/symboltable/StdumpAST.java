@@ -4,30 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import ghidra.app.util.importer.MessageLog;
-import ghidra.program.model.data.ArrayDataType;
-import ghidra.program.model.data.BooleanDataType;
-import ghidra.program.model.data.CharDataType;
-import ghidra.program.model.data.DataType;
-import ghidra.program.model.data.DataTypeManager;
-import ghidra.program.model.data.EnumDataType;
-import ghidra.program.model.data.FloatDataType;
-import ghidra.program.model.data.Integer16DataType;
-import ghidra.program.model.data.IntegerDataType;
-import ghidra.program.model.data.LongDataType;
-import ghidra.program.model.data.PointerDataType;
-import ghidra.program.model.data.ShortDataType;
-import ghidra.program.model.data.Structure;
-import ghidra.program.model.data.StructureDataType;
-import ghidra.program.model.data.Undefined1DataType;
-import ghidra.program.model.data.Undefined4DataType;
-import ghidra.program.model.data.Union;
-import ghidra.program.model.data.UnionDataType;
-import ghidra.program.model.data.UnsignedCharDataType;
-import ghidra.program.model.data.UnsignedInteger16DataType;
-import ghidra.program.model.data.UnsignedIntegerDataType;
-import ghidra.program.model.data.UnsignedLongDataType;
-import ghidra.program.model.data.UnsignedShortDataType;
-import ghidra.program.model.data.VoidDataType;
+import ghidra.program.model.data.*;
 import ghidra.util.task.TaskMonitor;
 
 public class StdumpAST {
@@ -326,10 +303,15 @@ public class StdumpAST {
 				}
 				for(Node node : baseClassNode.fields) {
 					if(node.storageClass != StorageClass.STATIC) {
-						// Currently we don't try to import bit fields.
 						DataType field = null;
 						if(node.name != null && node.name.equals("__vtable")) {
 							field = new PointerDataType(subClassNode.createVtable(importer));
+						} else if(node instanceof BitField) {
+							// Pass the underlying type of the bit field.
+							// Ideally we'd create a `BitFieldDataType` instead and everything would just work,
+							// but that type is internal to Ghidra, and `Structure` actually has a different API for
+							// bit field ops.
+							field = node.createType(importer);
 						} else {
 							importer.prefixStack.add(baseClassNode.name);
 							field = replaceVoidWithUndefined1(node.createType(importer));
@@ -365,22 +347,31 @@ public class StdumpAST {
 		
 		public static void addField(Structure structure, DataType field, Node node, int offset, String fieldName, boolean isInherited, InlineStructOrUnion baseClassNode, InlineStructOrUnion subClassNode, ImporterState importer) {
 			boolean isBitfield = node instanceof BitField;
-			boolean isBeyondEnd = offset + field.getLength() > subClassNode.sizeBits / 8;
-			boolean isZeroLengthStruct = false;
-			if(field instanceof Structure) {
-				Structure structField = (Structure) field;
-				if(structField.getLength() == 1 && structField.getNumDefinedComponents() == 0) {
-					isZeroLengthStruct = true;
-				}
-			}
-			if(!isBitfield && !isBeyondEnd && !isZeroLengthStruct) {
+			boolean isZeroLengthStruct = (field instanceof Structure) && field.isZeroLength();
+
+			int actualLastBit = (offset * 8) + (isBitfield ? node.bitfieldOffsetBits + node.sizeBits : field.getLength() * 8);
+			boolean isBeyondEnd = actualLastBit > subClassNode.sizeBits;
+
+			if(!isBeyondEnd && !isZeroLengthStruct) {
 				String comment = "";
 				if(isInherited) {
 					comment = "Inherited from " + baseClassNode.name;
 				}
 				try {
-					structure.replaceAtOffset(offset, field, field.getLength(), fieldName, comment);
-				} catch(IllegalArgumentException e) {
+					if(isBitfield) {
+						// When inserting bit field members (automatically packed), Ghidra expects us to
+						// give the offset of the *first byte* of the whole packed bit field.
+						// We don't have that info because we're inserting one member at a time.
+						// In most cases, though, the base address of a bit field should be aligned to the
+						// size of the data type, so we align and round down.
+						int baseByteOffset = offset & -field.getLength();
+						int bitOffset = node.bitfieldOffsetBits + ((offset - baseByteOffset) * 8);
+						// The passed-in DataType will represent the underlying field type.
+						structure.insertBitFieldAt(baseByteOffset, field.getLength(), bitOffset, field, node.sizeBits, fieldName, comment);
+					} else {
+						structure.replaceAtOffset(offset, field, field.getLength(), fieldName, comment);
+					}
+				} catch(IllegalArgumentException | InvalidDataTypeException e) {
 					importer.log.appendException(e);
 				}
 			}
