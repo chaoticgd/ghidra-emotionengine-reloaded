@@ -17,7 +17,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.stream.JsonReader;
 
 public class StdumpParser {
-	public static final String SUPPORTED_STDUMP_VERSION = "v1.2";
+	public static final String SUPPORTED_STDUMP_VERSION = "v1.2.1";
 	public static final int SUPPORTED_FORMAT_VERSION = 7;
 	
 	public static StdumpAST.ParsedJsonFile readJson(byte[] json) throws FileNotFoundException {
