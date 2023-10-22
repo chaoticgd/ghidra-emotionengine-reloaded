@@ -4,7 +4,7 @@ set -e
 # Downloads a release of ccc and puts all the stdump executables in the right
 # places. This file is called by the CI workflow for putting out new releases.
 
-version='v1.2'
+version='v1.2.1'
 
 pushd $(dirname -- "$0")
 rm -f "ccc_$(echo $version)_linux.zip"
