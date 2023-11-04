@@ -17,19 +17,14 @@ package ghidra.emotionengine.relocation;
 
 import ghidra.app.util.bin.format.elf.*;
 import ghidra.app.util.bin.format.elf.relocation.ElfRelocationContext;
-import ghidra.app.util.bin.format.elf.relocation.MIPS_ElfRelocationConstants;
 import ghidra.app.util.bin.format.elf.relocation.MIPS_ElfRelocationHandler;
 import ghidra.app.util.importer.MessageLog;
 import ghidra.program.model.address.*;
-import ghidra.program.model.listing.BookmarkManager;
-import ghidra.program.model.listing.BookmarkType;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.mem.*;
 import ghidra.program.model.reloc.Relocation.Status;
 import ghidra.program.model.reloc.RelocationResult;
 import ghidra.util.classfinder.ExtensionPointProperties;
-import ghidra.util.exception.NotFoundException;
-
 @ExtensionPointProperties(priority = 2)
 public class EmotionEngine_ElfRelocationHandler extends MIPS_ElfRelocationHandler {
 
@@ -63,7 +58,6 @@ public class EmotionEngine_ElfRelocationHandler extends MIPS_ElfRelocationHandle
 		Program program = elfRelocationContext.getProgram();
 		Memory memory = program.getMemory();
 		MessageLog log = elfRelocationContext.getLog();
-		BookmarkManager bMan = program.getBookmarkManager();
 		ElfSymbol elfSymbol = elfRelocationContext.getSymbol(relocation.getSymbolIndex());
 
 		String symbolName = elfSymbol.getNameAsString();
@@ -73,22 +67,6 @@ public class EmotionEngine_ElfRelocationHandler extends MIPS_ElfRelocationHandle
 		int newValue = 0;
 		int oldValue = memory.getInt(relocationAddress);
 		switch(relocation.getType()) {
-			case MIPS_ElfRelocationConstants.R_MIPS_16:
-				value = (oldValue << 16) >> 16;
-				value += base;
-				newValue = oldValue & HIGH_MASK;
-				newValue |= value & LOW_MASK;
-				break;
-			case MIPS_ElfRelocationConstants.R_MIPS_32:
-				newValue = oldValue+base;
-				break;
-			case MIPS_ElfRelocationConstants.R_MIPS_26:
-				value = (oldValue & MIPS_ElfRelocationConstants.MIPS_LOW26) << 2;
-				value |= (oldValue & 0xf0000000);
-				value += base;
-				newValue = oldValue & 0xfc000000;
-				newValue |= (value << 4) >> 6;
-				break;
 			case R_MIPS_MHI16:
 				if (elfRelocationContext.getElfHeader().e_type() == ET_IRX2) {
 					markAsError(program, relocationAddress, relocation.getType(),
@@ -137,7 +115,8 @@ public class EmotionEngine_ElfRelocationHandler extends MIPS_ElfRelocationHandle
 				value += base;
 				newValue = oldValue & ~DVP_MASK;
 				newValue |= value & DVP_MASK;
-				break;
+				memory.setInt(relocationAddress, newValue);
+				return new RelocationResult(Status.APPLIED, 4);
 			case R_MIPS_ADDEND:
 				// already accounted for
 				return RelocationResult.SKIPPED;
@@ -159,7 +138,8 @@ public class EmotionEngine_ElfRelocationHandler extends MIPS_ElfRelocationHandle
 				*/
 				value = (oldValue + base) & 0x001fffc0;
 				newValue = (oldValue & ~0x001fffc0) | (value >> 3);
-				break;
+				memory.setInt(relocationAddress, newValue);
+				return new RelocationResult(Status.APPLIED, 4);
 			case R_MIPS_DVP_11_PCREL:
 				/*
 					HOWTO (R_MIPS_DVP_11_PCREL,   /* type 
@@ -178,7 +158,8 @@ public class EmotionEngine_ElfRelocationHandler extends MIPS_ElfRelocationHandle
 				*/
 				value = (oldValue + base) & 0x7ff;
 				newValue = (oldValue & ~0x7ff) | (value >> 3);
-				break;
+				memory.setInt(relocationAddress, newValue);
+				return new RelocationResult(Status.APPLIED, 4);
 			case R_MIPS_DVP_11_S4:
 				/*
 					HOWTO (R_MIPS_DVP_11_S4,      /* type 
@@ -197,7 +178,8 @@ public class EmotionEngine_ElfRelocationHandler extends MIPS_ElfRelocationHandle
 				*/
 				value = (oldValue + base) & 0x03ff;
 				newValue = (oldValue & ~0x03ff) | (value >> 4);
-				break;
+				memory.setInt(relocationAddress, newValue);
+				return new RelocationResult(Status.APPLIED, 4);
 			case R_MIPS_DVP_U15_S3:
 				/*
 					HOWTO (R_MIPS_DVP_U15_S3,     /* type 
@@ -216,20 +198,12 @@ public class EmotionEngine_ElfRelocationHandler extends MIPS_ElfRelocationHandle
 				*/
 				value = ((oldValue + base) >> 3) & 0xf03ff;
 				newValue = (oldValue & ~0xf03ff) | value;
-				break;
+				memory.setInt(relocationAddress, newValue);
+				return new RelocationResult(Status.APPLIED, 4);
 			default:
-				String msg = String.format("Unexpected relocation type %d", relocation.getType());
-				bMan.setBookmark(relocationAddress, BookmarkType.ERROR, BookmarkType.ERROR, msg);
-			case MIPS_ElfRelocationConstants.R_MIPS_NONE:
-			case MIPS_ElfRelocationConstants.R_MIPS_HI16:
-			case MIPS_ElfRelocationConstants.R_MIPS_LO16:
-			case MIPS_ElfRelocationConstants.R_MIPS_GPREL16:
-				return RelocationResult.UNSUPPORTED;
+				return super.relocate(elfRelocationContext, relocation, relocationAddress);
 		}
 
-		memory.setInt(relocationAddress, newValue);
-		
-		return new RelocationResult(Status.APPLIED, 4);
 	}
 
 	private ElfRelocation getNextRelocation(ElfRelocationContext context,
