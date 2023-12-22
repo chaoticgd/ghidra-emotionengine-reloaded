@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ghidra:  ["10.4"]
+        ghidra:  ["11.0"]
     steps:
       - name: Checkout
         uses: actions/checkout@v1
