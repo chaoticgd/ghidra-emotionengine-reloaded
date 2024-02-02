@@ -55,6 +55,13 @@ public class EmotionEngine_ElfRelocationHandler extends MIPS_ElfRelocationHandle
 	@Override
 	public RelocationResult relocate(ElfRelocationContext elfRelocationContext, ElfRelocation relocation,
 			Address relocationAddress) throws MemoryAccessException {
+		// Some versions of the Metrowerks compiler produced relocation tables
+		// in statically linked executables. We want to disable relocation in
+		// those cases.
+		if(elfRelocationContext.getElfHeader().isExecutable()) {
+			return RelocationResult.SKIPPED;
+		}
+
 		Program program = elfRelocationContext.getProgram();
 		Memory memory = program.getMemory();
 		MessageLog log = elfRelocationContext.getLog();

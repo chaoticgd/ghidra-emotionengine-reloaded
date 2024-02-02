@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.13
+
+- Added support for Ghidra 11.0.1.
+- Prevent relocations from being applied incorrectly for statically linked executable files that still have a relocation table.
+
 ## v2.1.12
 
 - Added support for Ghidra 11.0.
