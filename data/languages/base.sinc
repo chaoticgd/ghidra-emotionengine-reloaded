@@ -43,6 +43,11 @@ define register offset=0 size=4 [
     pc_lo pc_hi _ _
 ];
 
+define register offset=0x5000 size=4 contextreg;
+define context contextreg
+  PAIR_INSTRUCTION_FLAG = (0,0) noflow     # =1 paired unaligned load/store instruction
+;
+
 define token instr(32)
     prime       = (26,31)
     op32		= (0,31)

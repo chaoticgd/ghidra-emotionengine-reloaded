@@ -5,7 +5,13 @@
         <property key="addressesDoNotAppearDirectlyInCode" value="true"/>
     </properties>
     <programcounter register="pc"/>
+    <context_data>
+        <context_set space="ram">
+            <set name="PAIR_INSTRUCTION_FLAG" val="0" description="1 if LDL/LDR or SDL/SDR are a pair"/>
+        </context_set>
+    </context_data>
     <register_data>
+        <register name="contextreg" hidden="true"/>
         <register name="fsa" rename="sa"/>
         <register name="vf0" vector_lane_sizes="4"/>
         <register name="vf1" vector_lane_sizes="4"/>

@@ -354,6 +354,16 @@ define pcodeop syscall;
     RT = valOrig | valLoad;
 }
 
+# ldl and ldr almost always come in pairs.
+# When the analyzer does finds a matching ldl/ldr pair, the pcode is simplified so that
+# ldl does all the loading while ldr is a no-op.
+:ldl RT, OFF_BASE               		is prime=26 & OFF_BASE & RT & PAIR_INSTRUCTION_FLAG=1 [ PAIR_INSTRUCTION_FLAG = 1; globalset(inst_next, PAIR_INSTRUCTION_FLAG);] {
+}
+:ldr RT, OFF_BASE               		is prime=27 & OFF_BASE & RT & PAIR_INSTRUCTION_FLAG=1 [ PAIR_INSTRUCTION_FLAG = 0; ] {
+    RT = *[ram]:8 OFF_BASE;
+}
+
+
 # 1000 01bb bbbt tttt iiii iiii iiii iiii
 :lh RT, OFF_BASE                		is prime=33 & OFF_BASE & RT {
     RT = sext(*[ram]:2 OFF_BASE);
@@ -391,6 +401,15 @@ define pcodeop syscall;
     valOrig:4 = RTsrc:4 & (0xffffffff << ((4-shft)* 8));
     valLoad:4 = *(addr) >> (shft * 8);
     RT = sext( valOrig | valLoad );
+}
+
+# lwl and lwr almost always come in pairs.
+# When the analyzer does finds a matching lwl/lwr pair, the pcode is simplified so that
+# lwl does all the loading while lwr is a no-op
+:lwl RT, OFF_BASE                       is prime=34 & OFF_BASE & RT & PAIR_INSTRUCTION_FLAG=1 [ PAIR_INSTRUCTION_FLAG = 1; globalset(inst_next, PAIR_INSTRUCTION_FLAG);] {
+}
+:lwr RT, OFF_BASE                       is prime=38 & OFF_BASE & RT & PAIR_INSTRUCTION_FLAG=1 [ PAIR_INSTRUCTION_FLAG = 0; ] {
+    RT = sext( *[ram]:4 OFF_BASE );
 }
 
 # 1001 11bb bbbt tttt iiii iiii iiii iiii
@@ -518,6 +537,14 @@ define pcodeop syscall;
     *(addr) = valStore | valOrig;
 }
 
+# When the analyzer finds a matching sdl/sdr pair, the pcode is simplified so that
+# sdl does all the storing while sdr is a no-op
+:sdl RTsrc, OFF_BASE                    is prime=44 & OFF_BASE & RTsrc & PAIR_INSTRUCTION_FLAG=1 [ PAIR_INSTRUCTION_FLAG = 1; globalset(inst_next, PAIR_INSTRUCTION_FLAG);] {
+}
+:sdr RTsrc, OFF_BASE                    is prime=45 & OFF_BASE & RTsrc & PAIR_INSTRUCTION_FLAG=1 [ PAIR_INSTRUCTION_FLAG = 0; ] {
+    *[ram]:8 OFF_BASE = RTsrc:8;
+}
+
 # 1010 01bb bbbt tttt iiii iiii iiii iiii
 :sh RTsrc, OFF_BASE             		is prime=41 & OFF_BASE & RTsrc {
     *[ram]:2 OFF_BASE = RTsrc:2;
@@ -617,6 +644,14 @@ define pcodeop syscall;
     valOrig:4 = *(addr) & (0xffffffff >> ((4-shft) * 8));
     valStore:4 = tmpRT << (shft*8);
     *(addr) = valOrig | valStore;
+}
+
+# When the analyzer finds a matching swl/swr pair, the pcode is simplified so that
+# swl does all the storing while swr is a no-op
+:swl RTsrc, OFF_BASE                    is prime=42 & OFF_BASE & RTsrc & PAIR_INSTRUCTION_FLAG=1 [ PAIR_INSTRUCTION_FLAG = 1; globalset(inst_next, PAIR_INSTRUCTION_FLAG);] {
+}
+:swr RTsrc, OFF_BASE                    is prime=46 & OFF_BASE & RTsrc & PAIR_INSTRUCTION_FLAG=1 [ PAIR_INSTRUCTION_FLAG = 0; ]{
+    *[ram]:4 OFF_BASE = RTsrc:4;
 }
 
 define pcodeop SYNC;
