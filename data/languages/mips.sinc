@@ -662,9 +662,8 @@ define pcodeop SYNC;
 }
 
 # 0000 00cc cccc cccc cccc cccc cc00 1100
-:syscall                        		is prime=0 & fct=12 & breakcode {
-    tmp:4=breakcode;
-    syscall(tmp);
+:syscall breakcode              		is prime=0 & fct=12 & breakcode {
+    syscall(v1);
 }
 
 # 0000 00ss ssst tttt cccc cccc cc11 0100
