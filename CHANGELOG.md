@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.16
+
+- Improved the decompilation of unaligned loads/stores with the new MipsR5900PreAnalyzer. [abelbriggs1](https://github.com/abelbriggs1)
+- The argument shown in decompilation output for the syscall instruction is now the syscall number instead of the break code (which is now shown in the disassembly).
+
 ## v2.1.15
 
 - Added support for Ghidra 11.0.3.
