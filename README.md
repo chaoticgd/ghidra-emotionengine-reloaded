@@ -27,7 +27,8 @@ gradle -PGHIDRA_INSTALL_DIR=/path/to/ghidra buildExtension
 
 ### 7-Zip returned unsupported method
 
-Modern versions of PCSX2 store save states using zstd compression, which Ghidra's zip implementation doesn't support. To work around this you have to add `SavestateZstdCompression` to `false` in the `EmuCore` section of your `PCSX2.ini` or `PCSX2_vm.ini` to `disabled` if you are using an older version before Qt. (i.e 1.6.0)
+Modern versions of PCSX2 store save states using zstd compression, which Ghidra's zip implementation doesn't support. To work around this you have to change `SavestateZstdCompression` to `false` in the `EmuCore` section of your `PCSX2.ini`.
+If you are using an older version, you have to add `SavestateZstdCompression=disabled` to your `PCSX2_vm.ini` under `EmuCore` section.
 
 ### Decompilation fails for some functions
 
