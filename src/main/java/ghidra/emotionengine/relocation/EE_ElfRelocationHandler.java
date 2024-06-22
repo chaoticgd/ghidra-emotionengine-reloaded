@@ -714,7 +714,7 @@ public class EE_ElfRelocationHandler
 				newValue = oldValue & ~DVP_MASK;
 				newValue |= value & DVP_MASK;
 				writeNewValue = true;
-				return new RelocationResult(Status.APPLIED, 4);
+				break;
 			case R_MIPS15_S3:
 				/*
 					HOWTO (R_MIPS15_S3,           /* type 
@@ -734,7 +734,7 @@ public class EE_ElfRelocationHandler
 				value = (oldValue + base) & 0x001fffc0;
 				newValue = (oldValue & ~0x001fffc0) | (value >> 3);
 				writeNewValue = true;
-				return new RelocationResult(Status.APPLIED, 4);
+				break;
 			case R_MIPS_DVP_11_PCREL:
 				/*
 					HOWTO (R_MIPS_DVP_11_PCREL,   /* type 
@@ -754,7 +754,7 @@ public class EE_ElfRelocationHandler
 				value = (oldValue + base) & 0x7ff;
 				newValue = (oldValue & ~0x7ff) | (value >> 3);
 				writeNewValue = true;
-				return new RelocationResult(Status.APPLIED, 4);
+				break;
 			case R_MIPS_DVP_11_S4:
 				/*
 					HOWTO (R_MIPS_DVP_11_S4,      /* type 
@@ -774,7 +774,7 @@ public class EE_ElfRelocationHandler
 				value = (oldValue + base) & 0x03ff;
 				newValue = (oldValue & ~0x03ff) | (value >> 4);
 				writeNewValue = true;
-				return new RelocationResult(Status.APPLIED, 4);
+				break;
 			case R_MIPS_DVP_U15_S3:
 				/*
 					HOWTO (R_MIPS_DVP_U15_S3,     /* type 
@@ -794,7 +794,7 @@ public class EE_ElfRelocationHandler
 				value = ((oldValue + base) >> 3) & 0xf03ff;
 				newValue = (oldValue & ~0xf03ff) | value;
 				writeNewValue = true;
-				return new RelocationResult(Status.APPLIED, 4);
+				break;
 			
 			/* End EE plugin specific relocations. */
 			
