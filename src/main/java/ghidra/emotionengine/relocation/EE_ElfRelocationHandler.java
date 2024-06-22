@@ -39,6 +39,10 @@ public class EE_ElfRelocationHandler
 	private static final int MIPS_LOW26 = 0x03FFFFFF;
 	private static final int MIPS_LOW21 = 0x001FFFFF;
 
+	private static final int LOW_MASK = 0xffff;
+	private static final int HIGH_MASK = 0xffff0000;
+	private static final int DVP_MASK = 0x7FFFFFF0;
+	
 	public static final int E_MIPS_MACH_5900 = 0x00920000;
 	
 	/**
@@ -64,7 +68,13 @@ public class EE_ElfRelocationHandler
 			ElfRelocation relocation, EE_ElfRelocationType type, Address relocationAddress,
 			ElfSymbol elfSymbol, Address symbolAddr, long symbolValue, String symbolName)
 			throws MemoryAccessException {
-
+		// Some versions of the Metrowerks compiler produced relocation tables
+		// in statically linked executables. We want to disable relocation in
+		// those cases.
+		if (elfRelocationContext.getElfHeader().isExecutable()) {
+			return RelocationResult.SKIPPED;
+		}
+		
 		// Determine if result value should be saved as addend for next relocation
 		final boolean saveValue = elfRelocationContext.saveValueForNextReloc;
 
@@ -141,7 +151,9 @@ public class EE_ElfRelocationHandler
 
 		Status status = Status.PARTIAL;
 		int byteLength = 4; // most relocations affect 4-bytes (change if different)
-
+		
+		int base = (int) elfRelocationContext.getImageBaseWordAdjustmentOffset();
+		
 		switch (type) {
 
 			case R_MIPS_GOT_OFST:
@@ -678,7 +690,114 @@ public class EE_ElfRelocationHandler
 					return RelocationResult.FAILURE;
 				}
 				break;
-				
+			
+			/* Begin EE plugin specific relocations. */
+			
+			case R_MIPS_DVP_27_S4:
+				/*
+				HOWTO (R_MIPS_DVP_27_S4,	  // type //
+				4,					 // rightshift //
+				2,					 // size (0 = byte, 1 = short, 2 = long) //
+				27,					// bitsize //
+				FALSE,				 // pc_relative //
+				4,					 // bitpos //
+				complain_overflow_unsigned, // complain_on_overflow //
+				bfd_elf_generic_reloc, // special_function //
+				"R_MIPS_DVP_27_S4",	// name //
+				FALSE,				 // partial_inplace //
+				0x7ffffff0,			// src_mask //
+				0x7ffffff0,			// dst_mask //
+				FALSE);				// pcrel_offset //
+				*/
+				value = oldValue & DVP_MASK;
+				value += base;
+				newValue = oldValue & ~DVP_MASK;
+				newValue |= value & DVP_MASK;
+				writeNewValue = true;
+				return new RelocationResult(Status.APPLIED, 4);
+			case R_MIPS15_S3:
+				/*
+					HOWTO (R_MIPS15_S3,           /* type 
+						3,                     /* rightshift 
+						2,                     /* size (0 = byte, 1 = short, 2 = long) 
+						15,                    /* bitsize 
+						FALSE,                 /* pc_relative 
+						6,                     /* bitpos 
+						complain_overflow_bitfield, /* complain_on_overflow 
+						bfd_elf_generic_reloc, /* special_function 
+						"R_MIPS15_S3",         /* name 
+						TRUE,                  /* partial_inplace 
+						0x001fffc0,            /* src_mask 
+						0x001fffc0,            /* dst_mask 
+						FALSE);                /* pcrel_offset 
+				*/
+				value = (oldValue + base) & 0x001fffc0;
+				newValue = (oldValue & ~0x001fffc0) | (value >> 3);
+				writeNewValue = true;
+				return new RelocationResult(Status.APPLIED, 4);
+			case R_MIPS_DVP_11_PCREL:
+				/*
+					HOWTO (R_MIPS_DVP_11_PCREL,   /* type 
+						3,                     /* rightshift 
+						2,                     /* size (0 = byte, 1 = short, 2 = long) 
+						11,                    /* bitsize 
+						TRUE,                  /* pc_relative 
+						0,                     /* bitpos 
+						complain_overflow_signed, /* complain_on_overflow 
+						bfd_elf_generic_reloc, /* special_function 
+						"R_MIPS_DVP_11_PCREL", /* name 
+						FALSE,                 /* partial_inplace 
+						0x7ff,                 /* src_mask 
+						0x7ff,                 /* dst_mask 
+						TRUE);                 /* pcrel_offset 
+				*/
+				value = (oldValue + base) & 0x7ff;
+				newValue = (oldValue & ~0x7ff) | (value >> 3);
+				writeNewValue = true;
+				return new RelocationResult(Status.APPLIED, 4);
+			case R_MIPS_DVP_11_S4:
+				/*
+					HOWTO (R_MIPS_DVP_11_S4,      /* type 
+						4,                     /* rightshift 
+						2,                     /* size (0 = byte, 1 = short, 2 = long) 
+						11,                    /* bitsize 
+						FALSE,                 /* pc_relative 
+						0,                     /* bitpos 
+						complain_overflow_signed, /* complain_on_overflow 
+						bfd_elf_generic_reloc, /* special_function 
+						"R_MIPS_DVP_11_S4",    /* name 
+						FALSE,                 /* partial_inplace 
+						0x03ff,                /* src_mask 
+						0x03ff,                /* dst_mask 
+						FALSE);                /* pcrel_offset 
+				*/
+				value = (oldValue + base) & 0x03ff;
+				newValue = (oldValue & ~0x03ff) | (value >> 4);
+				writeNewValue = true;
+				return new RelocationResult(Status.APPLIED, 4);
+			case R_MIPS_DVP_U15_S3:
+				/*
+					HOWTO (R_MIPS_DVP_U15_S3,     /* type 
+						3,                     /* rightshift 
+						2,                     /* size (0 = byte, 1 = short, 2 = long) 
+						15,                    /* bitsize 
+						FALSE,                 /* pc_relative 
+						0,                     /* bitpos 
+						complain_overflow_unsigned, /* complain_on_overflow 
+						dvp_u15_s3_reloc,      /* special_function 
+						"R_MIPS_DVP_U15_S3",   /* name 
+						FALSE,                 /* partial_inplace 
+						0xf03ff,               /* src_mask 
+						0xf03ff,               /* dst_mask 
+						FALSE);                /* pcrel_offset 
+				*/
+				value = ((oldValue + base) >> 3) & 0xf03ff;
+				newValue = (oldValue & ~0xf03ff) | value;
+				writeNewValue = true;
+				return new RelocationResult(Status.APPLIED, 4);
+			
+			/* End EE plugin specific relocations. */
+			
 			default:
 				markAsUnhandled(program, relocationAddress, type, symbolIndex, symbolName, log);
 				if (saveValue) {
