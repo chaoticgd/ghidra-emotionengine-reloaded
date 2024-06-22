@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.17
+
+- Added support for Ghidra 11.1.1.
+
 ## v2.1.16
 
 - Improved the decompilation of unaligned loads/stores with the new MipsR5900PreAnalyzer. [abelbriggs1](https://github.com/abelbriggs1)

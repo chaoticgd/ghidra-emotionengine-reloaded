@@ -354,6 +354,9 @@ public class StabsImporter extends FlatProgramAPI {
 					Address high = toAddr(def.addressRange.high - 1);
 					AddressSet range = new AddressSet(low, high);
 					Function function = findOrCreateFunction(def, low, high, range);
+					if(function == null) {
+						continue;
+					}
 					setFunctionName(function, def);
 					function.setComment(sourceFile.path);
 					importer.currentFuncOrGlobalName = def.name;
