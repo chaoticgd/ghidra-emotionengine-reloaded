@@ -18,8 +18,9 @@ jobs:
           java-package: jdk
           architecture: x64
       - name: Setup Ghidra
-        uses: er28-0652/setup-ghidra@b53614dada0a16e3c342277caae905b96d803109
+        uses: antoniovazquezblanco/setup-ghidra@679b733623c656b6bd88fdb3f812a2d5e3067eb6
         with:
+          auth_token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ matrix.ghidra }}
       - name: Test
         uses: gradle/gradle-build-action@v2
