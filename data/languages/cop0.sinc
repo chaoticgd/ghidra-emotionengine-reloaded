@@ -60,7 +60,7 @@ attach names op [
     BPR _ BHINBT IHIN
     BFH _ IFL _
     DXLTG DXLDT DXSTG DXSDT
-    GXWBIN _ DXIN _
+    DXWBIN _ DXIN _
     DHWBIN _ DHIN _
     DHWOIN _ _ _
 ];
