@@ -27,8 +27,10 @@ import ghidra.program.model.listing.Program;
 import ghidra.program.model.mem.*;
 import ghidra.program.model.reloc.Relocation.Status;
 import ghidra.program.model.reloc.RelocationResult;
+import ghidra.util.classfinder.ExtensionPointProperties;
 import ghidra.util.exception.AssertException;
 
+@ExtensionPointProperties(priority = 2)
 public class EE_ElfRelocationHandler
 		extends AbstractElfRelocationHandler<EE_ElfRelocationType, EE_ElfRelocationContext> {
 
