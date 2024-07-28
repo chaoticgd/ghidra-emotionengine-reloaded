@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.19
+
+- Fixed a relocation regression introduced in v2.1.17 where Ghidra's built-in MIPS relocation handler would take priority over the one included with the extension.
+
 ## v2.1.18
 
 - Added support for Ghidra 11.1.2.
