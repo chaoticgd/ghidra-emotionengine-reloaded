@@ -21,8 +21,9 @@ jobs:
           java-package: jdk
           architecture: x64
       - name: Setup Ghidra
-        uses: er28-0652/setup-ghidra@b53614dada0a16e3c342277caae905b96d803109
+        uses: antoniovazquezblanco/setup-ghidra@cacffdd46c5f53356e6a7822a2743a39f57d1958
         with:
+          auth_token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ matrix.ghidra }}
       - name: Download stdump
         run: bash ./os/download.sh
