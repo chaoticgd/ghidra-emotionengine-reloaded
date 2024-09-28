@@ -7,23 +7,23 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ghidra: ["11.1.2"]
+        ghidra: ["11.2", "11.1.2"]
     steps:
       - name: Checkout
         uses: actions/checkout@v1
       - name: Setup Java
-        uses: actions/setup-java@v1
+        uses: actions/setup-java@v4
         with:
-          java-version: "17"
-          java-package: jdk
-          architecture: x64
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10"
       - name: Setup Ghidra
         uses: antoniovazquezblanco/setup-ghidra@cacffdd46c5f53356e6a7822a2743a39f57d1958
         with:
           auth_token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ matrix.ghidra }}
       - name: Test
-        uses: gradle/gradle-build-action@v2
-        with:
-          gradle-version: 7.6
-          arguments: test -PGHIDRA_INSTALL_DIR=${{ env.GHIDRA_INSTALL_DIR }}
+        run: gradle -PGHIDRA_INSTALL_DIR=${{ env.GHIDRA_INSTALL_DIR }} test
