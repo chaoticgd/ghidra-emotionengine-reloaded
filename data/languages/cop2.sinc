@@ -173,13 +173,13 @@ with : prime=18 {
         goto Rel16;
     }
     
-    :cfc2.I RT, vuccid                            is vuop_21_25=0b00010 & RT    & vuccid    & vuop_1_10=0b0000000000 & I
+    :cfc2^I RT, vuccid                            is vuop_21_25=0b00010 & RT    & vuccid    & vuop_1_10=0b0000000000 & I
         { RT = _cfc2(vuccid:4); }
-    :ctc2.I RTsrc, vuccid                         is vuop_21_25=0b00110 & RTsrc & vuccid    & vuop_1_10=0b0000000000 & I
+    :ctc2^I RTsrc, vuccid                         is vuop_21_25=0b00110 & RTsrc & vuccid    & vuop_1_10=0b0000000000 & I
         { tmp:4 = _ctc2(RTsrc:4); vuccid = tmp; }
-    :qmfc2.I RT128, vufd_qmc2                     is vuop_21_25=0b00001 & RT128 & vufd_qmc2                          & I
+    :qmfc2^I RT128, vufd_qmc2                     is vuop_21_25=0b00001 & RT128 & vufd_qmc2                          & I
         { RT128 = _qmfc2(vufd_qmc2:4); }
-    :qmtc2.I RT128, vufd_qmc2                     is vuop_21_25=0b00101 & RT128 & vufd_qmc2 & vuop_1_10=0b0000000000 & I
+    :qmtc2^I RT128, vufd_qmc2                     is vuop_21_25=0b00101 & RT128 & vufd_qmc2 & vuop_1_10=0b0000000000 & I
         { vufd_qmc2 = _qmtc2(RT128:4); }
     :vcallms imm15                                is vuco=1 & vudest=0b0000 & imm15 & vuop_0_5=0b111000
         { _vcallms(imm15:4 * 8); }

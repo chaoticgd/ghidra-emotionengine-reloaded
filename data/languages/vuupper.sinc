@@ -83,8 +83,8 @@ define pcodeop _vsubaq;
 define pcodeop _vsubabc;
 define pcodeop _vwaitq;
 
-I: "NI" is vuinterlock=0 { export 0:1; }
-I: "I"  is vuinterlock=1 { export 0:1; }
+I: ""   is vuinterlock=0 { export 0:1; }
+I: ".I" is vuinterlock=1 { export 0:1; }
 
 dest: ""      is vudest=0b0000 { export 0:1; }
 dest: ".w"    is vudest=0b0001 { export 0:1; }
