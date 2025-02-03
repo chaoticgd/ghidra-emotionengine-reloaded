@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.22
+
+- Fixed disassembly of interlock bit in cfc2/ctc2/qmfc2/qmtc2 instructions.
+
 ## v2.1.21
 
 - Added support for Ghidra 11.2.1.
