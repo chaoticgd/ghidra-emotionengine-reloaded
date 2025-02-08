@@ -326,6 +326,11 @@ public class StabsImporter extends FlatProgramAPI {
 	
 	public DataType createTypedef(StdumpAST.Node node, ImporterState importer) {
 		DataType underlyingType = node.createType(importer);
+		// If Ghidra already has a built-in type with the same name, we don't
+		// need to create a typedef for it.
+		if(underlyingType instanceof BuiltInDataType && underlyingType.getName().equals(node.name)) {
+			return null;
+		}
 		// The type names provided for 128 bit built-in data types in the symbol
 		// table are a bit dodgy and conflict with each other, so here we make
 		// sure we don't create typedefs for them.
