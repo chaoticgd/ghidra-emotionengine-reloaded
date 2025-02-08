@@ -1,6 +1,6 @@
 # Changelog
 
-## v2.1.23
+## v2.1.22
 
 - Fixed an issue where the STABS importer would creating conflicting built-in types.
 - Fixed disassembly of interlock bit in cfc2/ctc2/qmfc2/qmtc2 instructions.
