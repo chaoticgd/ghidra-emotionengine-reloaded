@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.23
+
+- Added support for Ghidra 11.3.1.
+
 ## v2.1.22
 
 - Fixed an issue where the STABS importer would creating conflicting built-in types.
