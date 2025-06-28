@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.25
+
+- Added support for Ghidra 11.4.
+
 ## v2.1.24
 
 - Added support for Ghidra 11.3.2.
