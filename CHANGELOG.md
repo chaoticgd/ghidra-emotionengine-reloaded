@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.26
+
+- Added support for Ghidra 11.4.1.
+
 ## v2.1.25
 
 - Updated the system call patterns to better match those found in commercial games (because the SDKs patch the kernel, the system call numbers differ between the official SDK and the homebrew SDK).
