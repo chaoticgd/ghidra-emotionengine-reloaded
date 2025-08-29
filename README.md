@@ -9,7 +9,7 @@ This extension is based on the original [ghidra-emotionengine](https://github.co
 - Recover data types, functions and global variables from ELF files with `.mdebug` sections with the included STABS Analyzer.
 - Import PCSX2 save states.
 - Fix references to global variables with the MIPS-R5900 Constant Reference Analyzer.
-- Support for Ghidra 11.4.1.
+- Support for Ghidra 11.4.2.
 
 ## Installation
 
