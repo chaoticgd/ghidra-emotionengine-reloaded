@@ -4,7 +4,6 @@ import ghidra.app.util.bin.format.elf.ElfHeader;
 import ghidra.app.util.bin.format.elf.ElfLoadHelper;
 import ghidra.app.util.bin.format.elf.ElfSectionHeader;
 import ghidra.emotionengine.EE_ElfSection;
-// import ghidra.emotionengine.EmotionEngineLoader;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.data.*;
 import ghidra.program.model.listing.Data;
@@ -14,6 +13,8 @@ import ghidra.program.model.mem.MemoryBlock;
 import ghidra.program.model.mem.MemoryBufferImpl;
 import ghidra.program.model.scalar.Scalar;
 import ghidra.util.task.TaskMonitor;
+
+// Emitted by: https://github.com/GirianSeed/ee-gcc/blob/2.9-ee-991111-01/gas/config/tc-dvp.c#L2453-L2584
 
 public final class DvpOverlayTable implements EE_ElfSection {
 
@@ -80,10 +81,21 @@ public final class DvpOverlayTable implements EE_ElfSection {
 					mem.removeBlock(block, monitor);
 				}
 				scalar = (Scalar) comp.getComponent(2).getValue();
-				Address addr = elf.getDefaultAddress(
-					scalar.getValue() + base);
+				long vmaValue = scalar.getValue();
+				Address addr = elf.getDefaultAddress(vmaValue + base);
+				
+				// Rename sections containing "unknvma" with the VMA value
+				// (The `ee-dvp-as` assembler didn't know the VMA at that point presumably)
+				String blockName = shName;
+				if (shName.contains("unknvma")) {
+					blockName = shName.replace("unknvma", String.format("0x%x", vmaValue));
+					elf.getLog().appendMsg(String.format(
+						"Renamed section '%s' to '%s' (VMA: 0x%x)",
+						shName, blockName, vmaValue));
+				}
+				
 				block = mem.createInitializedBlock(
-					shName, addr, section.getLogicalSize(),
+					blockName, addr, section.getLogicalSize(),
 					(byte) 0, monitor, true);
 				scalar = (Scalar) comp.getComponent(1).getValue();
 				addr = elf.getDefaultAddress(scalar.getValue());

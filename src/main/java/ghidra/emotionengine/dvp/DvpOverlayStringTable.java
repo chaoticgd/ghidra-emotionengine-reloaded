@@ -8,6 +8,8 @@ import ghidra.app.util.bin.format.elf.ElfLoadHelper;
 import ghidra.app.util.bin.format.elf.ElfSectionHeader;
 import ghidra.program.model.address.Address;
 
+// Emitted by: https://github.com/GirianSeed/ee-gcc/blob/2.9-ee-991111-01/gas/config/tc-dvp.c#L2453-L2584
+
 public class DvpOverlayStringTable {
 
 	public static final String SHNAME_DVP_OVERLAY_STRTAB = ".DVP.ovlystrtab";
