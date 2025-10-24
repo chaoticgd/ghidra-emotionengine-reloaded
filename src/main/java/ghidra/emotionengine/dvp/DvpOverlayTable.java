@@ -66,10 +66,10 @@ public final class DvpOverlayTable implements EE_ElfSection {
 			monitor.checkCancelled();
 			Data comp = data.getComponent(i);
 			Scalar scalar = (Scalar) comp.getComponent(0).getValue();
-			long value = scalar.getValue();
+			long overlayNameOffset = scalar.getValue();
 			String shName = null;
 			try {
-				Address nameAddr = elf.getDefaultAddress(value);
+				Address nameAddr = elf.getDefaultAddress(overlayNameOffset);
 				shName = strTab.getString(nameAddr);
 				if (shName.equals("")) {
 					continue;
@@ -84,14 +84,36 @@ public final class DvpOverlayTable implements EE_ElfSection {
 				long vmaValue = scalar.getValue();
 				Address addr = elf.getDefaultAddress(vmaValue + base);
 				
-				// Rename sections containing "unknvma" with the VMA value
-				// (The `ee-dvp-as` assembler didn't know the VMA at that point presumably)
+				// Rename sections with new format: .DVP.overlay..<overlay_name_offset>.<filename_hash>.<vaddr>.<line_of_split>.<counter>
+				// Extract components from the original section name
 				String blockName = shName;
-				if (shName.contains("unknvma")) {
-					blockName = shName.replace("unknvma", String.format("0x%x", vmaValue));
-					elf.getLog().appendMsg(String.format(
-						"Renamed section '%s' to '%s' (VMA: 0x%x)",
-						shName, blockName, vmaValue));
+				if (shName.startsWith(".DVP.overlay..")) {
+					// Parse the original format to extract components
+					String[] parts = shName.substring(".DVP.overlay..".length()).split("\\.");
+					if (parts.length >= 4) {
+						// parts[0] = old vaddr (or "unknvma") - discarded
+						// parts[1] = filename_hash
+						// parts[2] = line_of_split
+						// parts[3] = counter
+						String filenameHash = parts[1];
+						String lineOfSplit = parts[2];
+						String counter = parts[3];
+						
+						// Format with proper padding:
+						// overlay_name_offset: 4 hex chars (e.g., "0x0000")
+						// vaddr: 4 hex chars (e.g., "0x0000")
+						// line_of_split: 4 decimal chars (e.g., "0000")
+						blockName = String.format(".DVP.overlay..0x%04x.%s.0x%04x.%04d.%s",
+							overlayNameOffset,
+							filenameHash,
+							vmaValue,
+							Integer.parseInt(lineOfSplit),
+							counter);
+						
+						elf.getLog().appendMsg(String.format(
+							"Renamed section '%s' to '%s' (overlay_name_offset: 0x%04x, VMA: 0x%04x)",
+							shName, blockName, overlayNameOffset & 0xFF, vmaValue & 0xFFFF));
+					}
 				}
 				
 				block = mem.createInitializedBlock(
