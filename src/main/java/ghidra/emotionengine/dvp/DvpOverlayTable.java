@@ -116,15 +116,10 @@ public final class DvpOverlayTable implements EE_ElfSection {
 					}
 				}
 				
-				block = mem.createInitializedBlock(
-					blockName, addr, section.getLogicalSize(),
-					(byte) 0, monitor, true);
 				scalar = (Scalar) comp.getComponent(1).getValue();
-				addr = elf.getDefaultAddress(scalar.getValue());
-				byte[] bytes = new byte[(int) block.getSize()];
-				MemoryBufferImpl buf = new MemoryBufferImpl(mem, addr);
-				buf.getBytes(bytes, 0);
-				block.putBytes(block.getStart(), bytes);
+				Address mappedAddress = elf.getDefaultAddress(scalar.getValue());
+				block = mem.createByteMappedBlock(
+					blockName, addr, mappedAddress, (int) section.getLogicalSize(), true);
 				// TODO: Restore VU instructions in Sleigh files so we can enable this
 				// if (section.isExecutable()) {
 				// 	EmotionEngineLoader.setMicroMode(elf.getProgram(), block);
