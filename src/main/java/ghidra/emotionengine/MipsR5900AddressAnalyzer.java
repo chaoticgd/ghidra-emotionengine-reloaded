@@ -390,7 +390,9 @@ public class MipsR5900AddressAnalyzer extends ConstantPropagationAnalyzer {
 					Address address, int size, DataType dataType, RefType refType) {
 
 				Address addr = address;
-
+				if (addr == Address.NO_ADDRESS) {
+					return false;
+				}
 				if (!program.getMemory().contains(addr) && refType.isData()) {
 					// bail on an invalid address
 					return false;
