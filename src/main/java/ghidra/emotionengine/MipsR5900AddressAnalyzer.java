@@ -30,6 +30,7 @@ import ghidra.app.util.importer.MessageLog;
 import ghidra.framework.options.Options;
 import ghidra.program.disassemble.Disassembler;
 import ghidra.program.model.address.Address;
+import ghidra.program.model.address.AddressOutOfBoundsException;
 import ghidra.program.model.address.AddressRange;
 import ghidra.program.model.address.AddressRangeIterator;
 import ghidra.program.model.address.AddressSet;
@@ -491,6 +492,12 @@ public class MipsR5900AddressAnalyzer extends ConstantPropagationAnalyzer {
 									AutoAnalysisManager.getAnalysisManager(program);
 								coveredSet.add(func.getBody());
 								amgr.codeDefined(coveredSet);
+							 }
+							 else {
+								// else T9 was set at the beginning of the function
+								// something within the function must have set it to
+								// an unknown value, so can continue
+								return null;
 							}
 						}
 						catch (ContextChangeException e) {
