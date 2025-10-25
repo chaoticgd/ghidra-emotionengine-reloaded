@@ -7,6 +7,7 @@ import ghidra.emotionengine.EE_ElfSection;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.data.*;
 import ghidra.program.model.listing.Data;
+import ghidra.program.model.listing.Listing;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.mem.Memory;
 import ghidra.program.model.mem.MemoryBlock;
@@ -40,6 +41,35 @@ public final class DvpOverlayTable implements EE_ElfSection {
 		return struct;
 	}
 
+	private void applyQWordDataType(Program program, MemoryBlock block, TaskMonitor monitor) {
+		int txId = program.startTransaction("Apply QWord data type to " + block.getName());
+		try {
+			Listing listing = program.getListing();
+			Address addr = block.getStart();
+			Address end = block.getEnd();
+			DataType qword = QWordDataType.dataType;
+			
+			// First, clear all existing code units (undefined data) in the block
+			listing.clearCodeUnits(addr, end, false);
+			
+			// Now apply qword data type across the entire block
+			while (addr.compareTo(end) <= 0) {
+				monitor.checkCancelled();
+				try {
+					listing.createData(addr, qword);
+					addr = addr.add(8); // QWord is 8 bytes
+				} catch (Exception e) {
+					// If we can't create data here (e.g., not enough bytes remaining), stop
+					break;
+				}
+			}
+			program.endTransaction(txId, true);
+		} catch (Exception e) {
+			program.endTransaction(txId, false);
+			elf.getLog().appendException(e);
+		}
+	}
+
 	@Override
 	public void parse(TaskMonitor monitor) throws Exception {
 		Memory mem = elf.getProgram().getMemory();
@@ -50,11 +80,11 @@ public final class DvpOverlayTable implements EE_ElfSection {
 			// only 1 function
 			ElfSectionHeader section = elfHeader.getSection(".vutext");
 			if (section != null) {
-				parseVuSection(elf, section);
+				parseVuSection(elf, section, monitor);
 			}
 			section = elfHeader.getSection(".vudata");
 			if (section != null) {
-				parseVuSection(elf, section);
+				parseVuSection(elf, section, monitor);
 			}
 			return;
 		}
@@ -128,6 +158,9 @@ public final class DvpOverlayTable implements EE_ElfSection {
 				// }
 				block.setRead(true);
 				block.setWrite(section.isWritable());
+				
+				// For compact display
+				applyQWordDataType(elf.getProgram(), block, monitor);
 			}
 			catch (Exception e) {
 				elf.getLog().appendException(e);
@@ -135,7 +168,7 @@ public final class DvpOverlayTable implements EE_ElfSection {
 		}
 	}
 
-	private void parseVuSection(ElfLoadHelper elfLoadHelper, ElfSectionHeader section) {
+	private void parseVuSection(ElfLoadHelper elfLoadHelper, ElfSectionHeader section, TaskMonitor monitor) {
 		Program program = elfLoadHelper.getProgram();
 		Memory mem = program.getMemory();
 		long base = section.isExecutable() ? VU1_TEXT_ADDRESS : VU1_DATA_ADDRESS;
@@ -161,6 +194,9 @@ public final class DvpOverlayTable implements EE_ElfSection {
 			// 	EmotionEngineLoader.setMicroMode(program, block);
 			// 	elfLoadHelper.createOneByteFunction(null, block.getStart(), true);
 			// }
+			
+			// For compact display
+			applyQWordDataType(program, block, monitor);
 		} catch (Exception e) {
 			elfLoadHelper.getLog().appendException(e);
 		}
