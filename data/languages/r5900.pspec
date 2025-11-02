@@ -76,12 +76,28 @@
     </register_data>
 
     <default_memory_blocks>
-        <memory_block name="registers.io"   start_address="0x10000000" length="0x10000"     initialized="false" mode="rwv"/>
-        <memory_block name="vu0.code"       start_address="0x11000000" length="0x1000"      initialized="false"/>
-        <memory_block name="vu0.data"       start_address="0x11004000" length="0x1000"      initialized="false"/>
-        <memory_block name="vu1.code"       start_address="0x11008000" length="0x4000"      initialized="false"/>
-        <memory_block name="vu1.data"       start_address="0x1100C000" length="0x4000"      initialized="false"/>
-        <memory_block name="registers.gs"   start_address="0x12000000" length="0x2000"      initialized="false" mode="rwv"/>
-        <memory_block name="scratchpad"     start_address="0x70000000" length="0x4000"      initialized="false"/>
+	<!--
+		//    start        end       bytes   description
+		// 0x00000000 - 0x01E84800 32000000 (main ram cached)
+		// 0x20000000 - 0x21E84800 32000000 (main ram uncached)
+		// 0x30100000 - 0x31E905C0 31000000 (main ram uncached & accelerated)
+		// 0x1C000000 - 0x1E000000 02000000 (iop ram)
+		// 0x1FC00000 - 0x1FFD0900 04000000 (BIOS/rom0 uncached)
+		// 0x9FC00000 - 0x9FFD0900 04000000 (BIOS/rom09 cached)
+		// 0xBFC00000 - 0xBFFD0900 04000000 (BIOS/rom0b uncached)
+
+		//	KUSEG: 00000000h-7FFFFFFFh User segment
+		//	KSEG0: 80000000h-9FFFFFFFh Kernel segment 0
+		//	KSEG1: A0000000h-BFFFFFFFh Kernel segment 1
+	-->
+		<memory_block name="registers.io"   start_address="0x10000000" length="0x00010000"    initialized="false" mode="rwv"/>
+		<memory_block name="vu0.code"       start_address="0x11000000" length="0x00001000"    initialized="false" mode="rwx"/>
+		<memory_block name="vu0.data"       start_address="0x11004000" length="0x00001000"    initialized="false" mode="rw"/>
+		<memory_block name="vu1.code"       start_address="0x11008000" length="0x00004000"    initialized="false" mode="rwx"/>
+		<memory_block name="vu1.data"       start_address="0x1100C000" length="0x00004000"    initialized="false" mode="rw"/>
+		<memory_block name="registers.gs"   start_address="0x12000000" length="0x00002000"    initialized="false" mode="rwv"/>
+		<memory_block name="scratchpad"     start_address="0x70000000" length="0x00004000"    initialized="false" mode="rw"/>
+		<memory_block name="iop_ram"        start_address="0x1C000000" length="0x02000000"    initialized="false" mode="rwx"/>
+		<memory_block name="rom0"           start_address="0x1FC00000" length="0x04000000"    initialized="false" mode="r"/>
     </default_memory_blocks>
 </processor_spec>

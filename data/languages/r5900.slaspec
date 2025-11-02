@@ -8,7 +8,7 @@
 #  5. COP2 (VU) Macro Instruction Set
 
 define endian=little;
-define alignment=2;
+define alignment=4;
 
 define space ram type=ram_space size=4 default;
 define space register type=register_space size=4;

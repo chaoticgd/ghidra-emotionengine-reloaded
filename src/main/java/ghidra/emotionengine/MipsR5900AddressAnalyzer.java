@@ -30,6 +30,7 @@ import ghidra.app.util.importer.MessageLog;
 import ghidra.framework.options.Options;
 import ghidra.program.disassemble.Disassembler;
 import ghidra.program.model.address.Address;
+import ghidra.program.model.address.AddressOutOfBoundsException;
 import ghidra.program.model.address.AddressRange;
 import ghidra.program.model.address.AddressRangeIterator;
 import ghidra.program.model.address.AddressSet;
@@ -364,7 +365,13 @@ public class MipsR5900AddressAnalyzer extends ConstantPropagationAnalyzer {
 						BigInteger val = context.getValue(reg, false);
 						if (val != null) {
 							long lval = val.longValue();
-							Address refAddr = instr.getMinAddress().getNewAddress(lval);
+							Address refAddr = null;
+							try {
+								refAddr = instr.getMinAddress().getNewAddress(lval);
+							} catch (AddressOutOfBoundsException e) {
+								// invalid reference
+								return;
+							}
 							if ((lval > 4096 || lval < 0) && lval != 0xffff &&
 								program.getMemory().contains(refAddr)) {
 
@@ -384,7 +391,9 @@ public class MipsR5900AddressAnalyzer extends ConstantPropagationAnalyzer {
 					Address address, int size, DataType dataType, RefType refType) {
 
 				Address addr = address;
-
+				if (addr == Address.NO_ADDRESS) {
+					return false;
+				}
 				if (!program.getMemory().contains(addr) && refType.isData()) {
 					// bail on an invalid address
 					return false;
@@ -483,6 +492,12 @@ public class MipsR5900AddressAnalyzer extends ConstantPropagationAnalyzer {
 									AutoAnalysisManager.getAnalysisManager(program);
 								coveredSet.add(func.getBody());
 								amgr.codeDefined(coveredSet);
+							 }
+							 else {
+								// else T9 was set at the beginning of the function
+								// something within the function must have set it to
+								// an unknown value, so can continue
+								return null;
 							}
 						}
 						catch (ContextChangeException e) {
