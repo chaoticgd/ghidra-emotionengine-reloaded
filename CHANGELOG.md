@@ -1,5 +1,10 @@
 # Changelog
 
+## v2.1.28
+
+- Added vector unit overlay importer.
+- Added support for Ghidra 11.4.3.
+
 ## v2.1.27
 
 - Added support for Ghidra 11.4.2.
