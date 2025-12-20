@@ -86,9 +86,9 @@ public class EE_ElfExtension extends MIPS_ElfExtension {
 			// case SHT_MIPS_IOPMOD_VALUE:
 			// 	section = new IopModSection(shdr, helper);
 			// 	break;
-			case SHT_DVP_OVERLAY_TABLE_VALUE:
-				section = new DvpOverlayTable(shdr, helper);
-				break;
+			// case SHT_DVP_OVERLAY_TABLE_VALUE:
+			//	section = new DvpOverlayTable(shdr, helper);
+			//	break;
 			default:
 				section = null;
 				break;
@@ -101,9 +101,10 @@ public class EE_ElfExtension extends MIPS_ElfExtension {
 							createHeapSection(helper, shdr);
 						}
 					}
-				} else {
-					section.parse(monitor);
 				}
+				//} else {
+				//	section.parse(monitor);
+				//}
 			} catch (Exception e) {
 				helper.log(e);
 			}
