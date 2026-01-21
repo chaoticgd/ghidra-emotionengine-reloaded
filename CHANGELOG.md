@@ -1,5 +1,9 @@
 # Changelog
 
+## v2.1.31
+
+- Added support for Ghidra 12.0.1.
+
 ## v2.1.30
 
 - Disabled the DvpOverlayTable class as a temporary measure to fix the symbol tree.
