@@ -67,3 +67,9 @@ eclipse.classpath.file.whenMerged {
 		entries.remove(entry);
 	}
 }
+
+tasks.named('buildExtension', Zip) {
+	from('**/stdump') {
+		useFileSystemPermissions()
+	}
+}
