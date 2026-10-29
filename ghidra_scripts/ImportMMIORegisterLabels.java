@@ -31,7 +31,7 @@ public class ImportMMIORegisterLabels extends GhidraScript {
         AddressSpace ram = currentProgram.getAddressFactory().getAddressSpace("ram");
         List<Register> registers = currentProgram.getLanguage().getRegisters();
         for(Register register : registers) {
-			monitor.checkCanceled();
+			monitor.checkCancelled();
             if(register.getAddressSpace() == ram) {
                 Symbol[] oldSymbols = currentProgram.getSymbolTable().getSymbols(register.getAddress());
                 for(Symbol symbol : oldSymbols) {

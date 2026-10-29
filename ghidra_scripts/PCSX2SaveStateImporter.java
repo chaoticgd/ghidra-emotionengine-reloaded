@@ -37,7 +37,7 @@ public class PCSX2SaveStateImporter extends GhidraScript {
         monitor.initialize(PATHS.size());
         monitor.setMessage("Loading Additional Memory...");
         for (String path : PATHS.keySet()) {
-            monitor.checkCanceled();
+            monitor.checkCancelled();
             ByteBuffer buf = getBuffer(gfs, path);
             MemoryBlock block = getMemoryBlock(PATHS.get(path));
             if (block != null) {
@@ -62,7 +62,7 @@ public class PCSX2SaveStateImporter extends GhidraScript {
         monitor.initialize(blocks.length);
         monitor.setMessage("Loading Main Memory...");
         for (MemoryBlock block : blocks) {
-            monitor.checkCanceled();
+            monitor.checkCancelled();
             long end = block.getEnd().getOffset();
             if (end > maxAddress && end < MAX_ADDRESS && !block.isOverlay()) {
                 maxAddress = block.getEnd().getOffset();
