@@ -21,13 +21,13 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: "8.14.4"
+          gradle-version: "9.8.2"
       - name: Setup Ghidra
-        uses: antoniovazquezblanco/setup-ghidra@029b00367e561cef07baacedb6de5e007a1ebc9a
+        uses: antoniovazquezblanco/setup-ghidra@696333e150699053666b95c5b9a3c159862fde2d
         with:
           auth_token: ${{ secrets.GITHUB_TOKEN }}
           version: ${{ matrix.ghidra }}
